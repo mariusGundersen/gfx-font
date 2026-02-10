@@ -226,7 +226,7 @@ export class GfxFont{
 
         return `
 const uint8_t ${this.name}Bitmaps[] PROGMEM = {
-${glyphs.map(g => `  ${g.bytes.join(', ')},`).join('\n')}
+${glyphs.filter(g => g.bytes.length > 0).map(g => `  ${g.bytes.join(', ')},`).join('\n')}
 };
 
 const GFXglyph ${this.name}Glyphs[] PROGMEM = {
