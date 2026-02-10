@@ -468,17 +468,27 @@ class GfxGlyph {
     constructor(char, bytes = [], glyph = {height: 0, width: 0, offset: 0, xAdvance: 0, xOffset: 0, yOffset: 0}) {
         this.char = char;
         this.glyph = glyph;
+        /**
+         * @type {boolean[][]}
+         */
         this.gfx = [];
+        this.parseBytes(bytes);
         this.xAdvance = glyph.xAdvance;
         this.xOffset = glyph.xOffset;
         this.yOffset = glyph.yOffset;
+    }
 
+    /**
+     * @param {number[]} bytes
+     */
+    parseBytes(bytes){
+        this.gfx = [];
         let pix = 0;
         let byte = 0;
         let j = -1;
-        for(let y=0; y<glyph.height; y++) {
+        for(let y=0; y<this.glyph.height; y++) {
             const row = [];
-            for(let x = 0; x < glyph.width;x++) {
+            for(let x = 0; x < this.glyph.width;x++) {
                 if(j < 0){
                     j=7;
                     byte = bytes[pix++];
@@ -491,6 +501,10 @@ class GfxGlyph {
                 
             this.gfx.push(row);
         }
+    }
+
+    getBytes(){
+        return toBytes(this.gfx.flat());
     }
 
     get width(){
@@ -565,7 +579,7 @@ class GfxGlyph {
 
     serialize(){
         return {
-            bytes: toBytes(this.gfx.flat()),
+            bytes: this.getBytes(),
             width: this.width,
             height: this.height,
             xAdvance: this.xAdvance,
@@ -604,12 +618,12 @@ function loadFont(font){
     firstCharInput.valueAsNumber = font.first;
     lastCharInput.valueAsNumber = font.last;
 
-    firstCharInput?.addEventListener('change', e => {
+    firstCharInput.onchange = (e => {
         font.resize(firstCharInput.valueAsNumber, font.last);
         updateCharacterTable(font);
     });
         
-    lastCharInput?.addEventListener('change', e => {
+    lastCharInput.onchange = (e => {
         font.resize(font.first, lastCharInput.valueAsNumber);
         updateCharacterTable(font);
     });
@@ -643,7 +657,7 @@ function updateCharacterTable(font){
             const glyph = font.getGlyph(charCode)
             if(glyph) {
                 td.textContent = glyph.char;
-                td.style.background = '#eee';
+                td.style.background = glyph.width === 0 || glyph.height === 0 ? '#ccc' : '#eee';
 
                 td.addEventListener('click', () => loadGlyph(glyph));
             } else {
@@ -666,23 +680,23 @@ function loadGlyph(glyph) {
     glyphXOffsetInput.valueAsNumber = glyph.xOffset;
     glyphYOffsetInput.valueAsNumber = glyph.yOffset
     
-    glyphWidthInput?.addEventListener('change', e => {        
+    glyphWidthInput.onchange = (e => {        
         glyph.width = glyphWidthInput.valueAsNumber;
         updateGlyphTable(glyph);
     });
-    glyphHeightInput?.addEventListener('change', e => {
+    glyphHeightInput.onchange = (e => {
         glyph.height = glyphHeightInput.valueAsNumber;
         updateGlyphTable(glyph);
     });
-    glyphXAdvanceInput?.addEventListener('change', e => {
+    glyphXAdvanceInput.onchange = (e => {
         glyph.xAdvance = glyphXAdvanceInput.valueAsNumber;
         updateGlyphTable(glyph);
     });
-    glyphXOffsetInput?.addEventListener('change', e => {
+    glyphXOffsetInput.onchange = (e => {
         glyph.xOffset = glyphXOffsetInput.valueAsNumber;
         updateGlyphTable(glyph);
     });
-    glyphYOffsetInput?.addEventListener('change', e => {
+    glyphYOffsetInput.onchange = (e => {
         glyph.yOffset = glyphYOffsetInput.valueAsNumber;
         updateGlyphTable(glyph);
     });
