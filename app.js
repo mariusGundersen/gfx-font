@@ -39,7 +39,7 @@ class App extends RefreshComponent {
     render({ font }, {glyph}) {
         return html`
             <main class="app">                
-                <h1>${font?.name ?? 'Untitled Font'}</h1>
+                <h1>Font editor</h1>
                 <div>
                     <button onClick=${() => console.log(font?.serialize())}>Download</button>
                 </div>
@@ -62,6 +62,15 @@ class FontEditor extends RefreshComponent {
             <fieldset>
                 <legend>Font Settings</legend>
                 <label>
+                    <span>Name</span>
+                    <input
+                        type="text"
+                        name="name"
+                        value=${props.font.name}
+                        onChange=${this.refresh((/** @type {{ target: { value: string; }; }} */ e) => { props.font.name = e.target.value; })}
+                    />
+                </label>
+                <label>
                     <span>First character</span>
                     <input
                         type="number"
@@ -69,7 +78,8 @@ class FontEditor extends RefreshComponent {
                         value=${props.font.first}
                         onChange=${this.refresh((/** @type {{ target: { valueAsNumber: number; }; }} */ e) => { props.font.first = e.target.valueAsNumber; })}
                         min="1"
-                        max="255" />
+                        max="255" 
+                    />
                 </label>
                 <label>
                     <span>Last character</span>
@@ -79,7 +89,8 @@ class FontEditor extends RefreshComponent {
                         value=${props.font.last}
                         onChange=${this.refresh((/** @type {{ target: { valueAsNumber: number; }; }} */ e) => { props.font.last = e.target.valueAsNumber; })}
                         min="1"
-                        max="255" />
+                        max="255" 
+                    />
                 </label>
                 <${CharacterTable} font=${props.font} onSelectGlyph=${(/** @type {GfxGlyph} */ glyph) => props.onSelectGlyph(glyph)} />
             </fieldset>
@@ -205,7 +216,12 @@ class GlyphTable extends RefreshComponent {
                     <tr>
                         ${r.map((c, x) => html`
                             <td>
-                                <input type="checkbox" checked=${c ? 'checked' : ''} onChange=${this.refresh((/** @type {{ target: { checked: boolean; }; }} */ e) => { glyph.setPixel(x, y, e.target.checked); })} />
+                                <input 
+                                    type="checkbox" 
+                                    checked=${c ? 'checked' : ''} 
+                                    onChange=${this.refresh((/** @type {{ target: { checked: boolean; }; }} */ e) => { glyph.setPixel(x, y, e.target.checked); })}
+                                    onMouseLeave=${this.refresh((/** @type {{ target: { checked: boolean }; buttons: number }} */ e) => { e.buttons && glyph.setPixel(x, y, !e.target.checked); })}
+                                />
                             </td>
                         `)}
                     </tr>

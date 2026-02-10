@@ -214,7 +214,7 @@ export class GfxFont{
             yOffset: g.yOffset.toString(),
             char: g.char,
             code: g.char.charCodeAt(0).toString(16).padStart(2, '0'),
-            offset: offset += g.bytes.length, 
+            offset: (offset += g.bytes.length) - g.bytes.length, 
         }));
 
         const maxOffset = offset.toString().length;
