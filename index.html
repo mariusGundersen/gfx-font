@@ -29,54 +29,12 @@
     <h1>This is a font editor for the GFX font used by the adafruit gfx library and other libraries</h1>
 
     <div>
-
         <details>
             <summary>Load font</summary>
             <textarea name="fontstring"></textarea>
         </details>
-        
-    </div>
 
-    <form>
-        <fieldset>
-            <legend>Font Settings</legend>
-            <label>
-                <span>First character</span>
-                <input type="number" name="first-char" value="32" min="1" max="255">
-            </label>
-            <label>
-                <span>Last character</span>
-                <input type="number" name="last-char" value="127" min="1" max="255">
-            </label>
-            <table id="characters">
-            </table>
-        </fieldset>
-        <fieldset>
-            <legend>Glyph Editor</legend>
-            
-            <label>
-                <span>Width</span>
-                <input type="number" name="width" value="8" min="1" max="255">
-            </label>
-            <label>
-                <span>Height</span>
-                <input type="number" name="height" value="8" min="1" max="255">
-            </label>
-            <label>
-                <span>X offset</span>
-                <input type="number" name="x-offset" value="0" min="-255" max="255">
-            </label>
-            <label>
-                <span>Y offset</span>
-                <input type="number" name="y-offset" value="0" min="-255" max="255">
-            </label>
-            <label>
-                <span>X Advance</span>
-                <input type="number" name="x-advance" value="8" min="0" max="255">
-            </label>
-            <table id="glyph"></table>
-        </fieldset>
-    </form>
-    <script type="module" src="main.js"></script>
+    </div>
+    <script type="module" src="app.js"></script>
 </body>
 </html>

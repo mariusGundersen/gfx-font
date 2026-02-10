@@ -1,25 +1,219 @@
- // @ts-check
+// @ts-check
 
- import { GfxFont, GfxGlyph } from "./gfx";
+// @ts-ignore
+import { html, Component, render } from 'https://unpkg.com/htm/preact/standalone.module.js';
+import { GfxFont, GfxGlyph } from './gfx.js';
 
-const fontStringInput = assert(document.querySelector('textarea[name="fontstring"]'), HTMLTextAreaElement);
+/**
+ * @interface Component
+ */
 
-const firstCharInput = assert(document.querySelector('input[name="first-char"]'), HTMLInputElement);
-const lastCharInput = assert(document.querySelector('input[name="last-char"]'), HTMLInputElement);
-const characterTable = assert(document.querySelector('table#characters'), HTMLTableElement);
+class RefreshComponent extends Component {
+    state = {refresh: 0};
+    /**
+     * @param {any} value
+     */
+    setState(value){
+        super.setState(value);
+    }
+    /**
+     * @param {Function} callback
+     */
+    refresh(callback){
+        return (/** @type {any} */ ...args) => {
+            callback?.(...args);
+            this.setState({refresh: this.state.refresh + 1});
+        }
+    }
+}
 
-const glyphTable = assert(document.querySelector('table#glyph'), HTMLTableElement);
-const glyphWidthInput = assert(document.querySelector('input[name="width"]'), HTMLInputElement);
-const glyphHeightInput = assert(document.querySelector('input[name="height"]'), HTMLInputElement);
-const glyphXOffsetInput = assert(document.querySelector('input[name="x-offset"]'), HTMLInputElement);
-const glyphYOffsetInput = assert(document.querySelector('input[name="y-offset"]'), HTMLInputElement);
-const glyphXAdvanceInput = assert(document.querySelector('input[name="x-advance"]'), HTMLInputElement);
+class App extends RefreshComponent {
+    /**
+     * @param {{ 
+     *      font: GfxFont; 
+     * }} props
+     * @param {{
+     *      glyph: GfxGlyph | null;
+     * }} state
+     */
+    render({ font }, {glyph}) {
+        return html`
+            <main class="app">                
+                <h1>${font?.name ?? 'Untitled Font'}</h1>
+                <div>
+                    <button onClick=${() => console.log(font?.serialize())}>Download</button>
+                </div>
+                <${FontEditor} font=${font} onSelectGlyph=${(/** @type {GfxGlyph} */ glyph) => this.setState({glyph})} />
+                <${GlyphEditor} glyph=${glyph} />
+            </main>
+        `;
+    }
+}
 
-fontStringInput.addEventListener('change', e => {
-    const font = GfxFont.fromString(fontStringInput.value);
+class FontEditor extends RefreshComponent {
+    /**
+     * @param {{ 
+     *      font: GfxFont; 
+     *      onSelectGlyph(glyph: GfxGlyph): void
+     * }} props
+     */
+    render(props) {
+        return html`
+            <fieldset>
+                <legend>Font Settings</legend>
+                <label>
+                    <span>First character</span>
+                    <input
+                        type="number"
+                        name="first-char"
+                        value=${props.font.first}
+                        onChange=${this.refresh((/** @type {{ target: { valueAsNumber: number; }; }} */ e) => { props.font.first = e.target.valueAsNumber; })}
+                        min="1"
+                        max="255" />
+                </label>
+                <label>
+                    <span>Last character</span>
+                    <input
+                        type="number"
+                        name="last-char"
+                        value=${props.font.last}
+                        onChange=${this.refresh((/** @type {{ target: { valueAsNumber: number; }; }} */ e) => { props.font.last = e.target.valueAsNumber; })}
+                        min="1"
+                        max="255" />
+                </label>
+                <${CharacterTable} font=${props.font} onSelectGlyph=${(/** @type {GfxGlyph} */ glyph) => props.onSelectGlyph(glyph)} />
+            </fieldset>
+        `;
+    }
+}
 
-    loadFont(font);
-})
+class CharacterTable extends Component {
+    /**
+     * @param {{ font: GfxFont; onSelectGlyph: (glyph: GfxGlyph) => void; }} props
+     * @param {any} state
+     */
+    render(props, state){
+        return html`
+            <table id="characters">
+                <tr>
+                    <th></th>
+                    ${
+                        new Array(16).fill(0).map((_, i) => html`<th>${`_${i.toString(16)}`}</th>`)
+                    }
+                </tr>
+                ${new Array(16).fill(0).map((_, i) => html`
+                    <tr>
+                        <th>${`${i.toString(16)}_`}</th>
+                        ${new Array(16).fill(0)
+                            .map((_, j) => props.font.getGlyph(i * 16 + j))
+                            .map((glyph) => html`
+                                <td 
+                                    onClick=${glyph && (() => props.onSelectGlyph(glyph))} 
+                                    style=${{ background: glyph ? glyph.width === 0 || glyph.height === 0 ? '#ccc' : '#cec' : '#ecc' }}
+                                >
+                                    ${glyph?.char ?? ''}
+                                </td>
+                            `)
+                        }
+                    </tr>
+                `)}
+            </table>
+        `
+    }
+}
+
+class GlyphEditor extends RefreshComponent {
+    /**
+     * @param {{ glyph: GfxGlyph }} props
+     * @param {any} state
+     */
+    render({glyph}, state){
+        return html`
+            <fieldset>
+                <legend>Glyph Editor</legend>
+                
+                <label>
+                    <span>Width</span>
+                    <input 
+                        type="number" 
+                        name="width"
+                        value=${glyph?.width ?? 8}
+                        onChange=${this.refresh((/** @type {{ target: { valueAsNumber: number; }; }} */ e) => { glyph.width = e.target.valueAsNumber; })} 
+                        min="1"
+                        max="255"
+                    />
+                </label>
+                <label>
+                    <span>Height</span>
+                    <input 
+                        type="number" 
+                        name="height"
+                        value=${glyph?.height ?? 8}
+                        onChange=${this.refresh((/** @type {{ target: { valueAsNumber: number; }; }} */ e) => { glyph.height = e.target.valueAsNumber; })} 
+                        min="1"
+                        max="255"
+                    />
+                </label>
+                <label>
+                    <span>X offset</span>
+                    <input 
+                        type="number" 
+                        name="x-offset"
+                        value=${glyph?.xOffset ?? 0}
+                        onChange=${this.refresh((/** @type {{ target: { valueAsNumber: number; }; }} */ e) => { glyph.xOffset = e.target.valueAsNumber; })} 
+                        min="-255"
+                        max="255"
+                    />
+                </label>
+                <label>
+                    <span>Y offset</span>
+                    <input 
+                        type="number" 
+                        name="y-offset"
+                        value=${glyph?.yOffset ?? 0}
+                        onChange=${this.refresh((/** @type {{ target: { valueAsNumber: number; }; }} */ e) => { glyph.yOffset = e.target.valueAsNumber; })} 
+                        min="-255"
+                        max="255"
+                    />
+                </label>
+                <label>
+                    <span>X Advance</span>
+                    <input 
+                        type="number" 
+                        name="x-advance"
+                        value=${glyph?.xAdvance ?? 8}
+                        onChange=${this.refresh((/** @type {{ target: { valueAsNumber: number; }; }} */ e) => { glyph.xAdvance = e.target.valueAsNumber; })} 
+                        min="0"
+                        max="255"
+                    />
+                </label>
+                <${GlyphTable} glyph=${glyph} />
+            </fieldset>
+        `;
+    }
+}
+
+class GlyphTable extends RefreshComponent {
+    /**
+     * @param {{ glyph: GfxGlyph }} props
+     * @param {any} state
+     */
+    render({glyph}, state){
+        return html`
+            <table id="glyph">
+                ${glyph?.gfx.map((r, y) => html`
+                    <tr>
+                        ${r.map((c, x) => html`
+                            <td>
+                                <input type="checkbox" checked=${c ? 'checked' : ''} onChange=${this.refresh((/** @type {{ target: { checked: boolean; }; }} */ e) => { glyph.setPixel(x, y, e.target.checked); })} />
+                            </td>
+                        `)}
+                    </tr>
+                `)}
+            </table>
+        `
+    }
+}
 
 const font = GfxFont.fromString(`
 const uint8_t FreeSans9pt7bBitmaps[] PROGMEM = {
@@ -226,134 +420,4 @@ const GFXfont FreeSans9pt7b PROGMEM = {
 
 `);
 
-console.log(font.serialize())
-
-loadFont(font);
-    
-    /**
- * @param {GfxFont} font
- */
-function loadFont(font){
-    firstCharInput.valueAsNumber = font.first;
-    lastCharInput.valueAsNumber = font.last;
-
-    firstCharInput.onchange = (e => {
-        font.first = firstCharInput.valueAsNumber;
-        updateCharacterTable(font);
-    });
-        
-    lastCharInput.onchange = (e => {
-        font.last = lastCharInput.valueAsNumber;
-        updateCharacterTable(font);
-    });
-
-    updateCharacterTable(font);
-}
-
-/**
- * @param {GfxFont} font
- */
-function updateCharacterTable(font){
-    
-    characterTable.innerHTML = '';
-    const tr = document.createElement('tr');
-    tr.append(document.createElement('th')); // Empty corner cell
-    for(let i = 0; i<16; i++) {
-        const th = document.createElement('th');
-        th.textContent = `_${i.toString(16)}`;
-        tr.append(th);
-    }
-    characterTable.append(tr);
-
-    for(let i = 0; i<16; i++) {
-        const tr = document.createElement('tr');
-        const th = document.createElement('th');
-        th.textContent = `${i.toString(16)}_`;
-        tr.append(th);
-        for(let j = 0; j < 16; j++) {
-            const td = document.createElement('td');
-            const glyph = font.getGlyph((i * 16 + j));
-            if(glyph) {
-                td.textContent = glyph.char;
-                td.style.background = glyph.width === 0 || glyph.height === 0 ? '#ccc' : '#eee';
-
-                td.addEventListener('click', () => loadGlyph(glyph));
-            } else {
-                td.textContent = '';
-                td.style.background = '#ecc';
-            }
-            tr.append(td);
-        }
-        characterTable.append(tr);
-    }
-}
-
-/**
- * @param {GfxGlyph} glyph
- */
-function loadGlyph(glyph) {
-    glyphWidthInput.valueAsNumber = glyph.width;
-    glyphHeightInput.valueAsNumber = glyph.height;
-    glyphXAdvanceInput.valueAsNumber = glyph.xAdvance;
-    glyphXOffsetInput.valueAsNumber = glyph.xOffset;
-    glyphYOffsetInput.valueAsNumber = glyph.yOffset
-    
-    glyphWidthInput.onchange = (e => {        
-        glyph.width = glyphWidthInput.valueAsNumber;
-        updateGlyphTable(glyph);
-    });
-    glyphHeightInput.onchange = (e => {
-        glyph.height = glyphHeightInput.valueAsNumber;
-        updateGlyphTable(glyph);
-    });
-    glyphXAdvanceInput.onchange = (e => {
-        glyph.xAdvance = glyphXAdvanceInput.valueAsNumber;
-        updateGlyphTable(glyph);
-    });
-    glyphXOffsetInput.onchange = (e => {
-        glyph.xOffset = glyphXOffsetInput.valueAsNumber;
-        updateGlyphTable(glyph);
-    });
-    glyphYOffsetInput.onchange = (e => {
-        glyph.yOffset = glyphYOffsetInput.valueAsNumber;
-        updateGlyphTable(glyph);
-    });
-
-    updateGlyphTable(glyph);
-}
-
-/**
- * @param {GfxGlyph} glyph
- */
-function updateGlyphTable(glyph) {
-    
-    glyphTable.innerHTML = '';
-    for(let y=0; y<glyph.height; y++) {
-        const tr = document.createElement('tr');
-        for(let x = 0; x < glyph.width;x++) {            
-            const td = document.createElement('td');
-            const checkmark = document.createElement('input');
-            checkmark.type = 'checkbox';
-            checkmark.checked = glyph.getPixel(x, y);
-            checkmark.addEventListener('input', e => {
-                glyph.setPixel(x, y, checkmark.checked);
-            });
-            td.append(checkmark);
-            
-            tr.append(td);
-        }
-            
-        glyphTable.append(tr);
-    }
-}
-
-/**
- * @template {any} T    
- * @param {any} value 
- * @param {new (...args: any[]) => T} constructor
- * @returns {T}
- */
-function assert(value, constructor){
-  if(value instanceof constructor) return value;
- throw new Error('Assertion failed');
-}
+render(html`<${App} font=${font} />`, document.body);
