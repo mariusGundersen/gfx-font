@@ -30,12 +30,16 @@ class RefreshComponent extends Component {
  * @extends {RefreshComponent<{font: GfxFont}, {font: GfxFont | null, glyph: GfxGlyph | null}>}
  */
 class App extends RefreshComponent {
-    state = {
-        font: null,
-        glyph: null
-    };
 
-    handleUpload(/** @type {{ target: { files: FileList; }; }} */ e) {
+    /**
+     * @param {{ font: GfxFont; } | undefined} props
+     */
+    constructor(props){
+        super(props);
+        this.setState({font: props?.font ?? null});
+    }
+
+    handleUpload = (/** @type {{ target: { files: FileList; }; }} */ e) => {
         const file = e.target.files?.[0];
         if (!file) return;
         const reader = new FileReader();
@@ -47,18 +51,30 @@ class App extends RefreshComponent {
         };
         reader.readAsText(file);
     }
+    
+    handleDownload = () => {
+        if(!this.state.font) return;
+        const content = this.state.font.serialize();
+        const blob = new Blob([content], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${this.state.font.name || 'font'}.h`;
+        a.click();
+        URL.revokeObjectURL(url);
+    };
 
     /**
      * @param {{ 
      *      font: GfxFont; 
-     * }} props
+     * }} _
      * @param {{
      *      font: GfxFont | null
      *      glyph: GfxGlyph | null;
      * } | undefined} state
      */
-    render(props, state) {
-        const font = state?.font ?? props.font;
+    render(_, state) {
+        const font = state?.font;
         return html`
             <main class="app">                
                 <h1>Font editor</h1>
@@ -67,7 +83,7 @@ class App extends RefreshComponent {
                         Upload font file:
                         <input type="file" accept=".h,.txt" onChange=${this.handleUpload} />
                     </label>
-                    <button onClick=${() => console.log(font?.serialize())}>Download</button>
+                    <button onClick=${this.handleDownload}>Download</button>
                 </div>
                 <${FontEditor} font=${font} onSelectGlyph=${(/** @type {GfxGlyph} */ glyph) => this.setState({glyph})} />
                 <${GlyphEditor} glyph=${state?.glyph} />
