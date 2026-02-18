@@ -1,55 +1,84 @@
 // @ts-check
 
-// @ts-ignore
-import { html, Component, render } from 'https://unpkg.com/htm/preact/standalone.module.js';
+import { Component, html, render } from 'https://unpkg.com/htm/preact/standalone.module.js';
 import { GfxFont, GfxGlyph } from './gfx.js';
 
 /**
  * @interface Component
+ * 
  */
 
+/**
+ * @template {{}} P
+ * @template {{}} S
+ * @extends {Component<P, S & {refresh?: number}>}
+ * @abstract
+ */
 class RefreshComponent extends Component {
-    state = {refresh: 0};
-    /**
-     * @param {any} value
-     */
-    setState(value){
-        super.setState(value);
-    }
     /**
      * @param {Function} callback
      */
     refresh(callback){
         return (/** @type {any} */ ...args) => {
             callback?.(...args);
-            this.setState({refresh: this.state.refresh + 1});
+            this.setState({refresh: (this.state.refresh || 0) + 1});
         }
     }
 }
 
+/**
+ * @extends {RefreshComponent<{font: GfxFont}, {font: GfxFont | null, glyph: GfxGlyph | null}>}
+ */
 class App extends RefreshComponent {
+    state = {
+        font: null,
+        glyph: null
+    };
+
+    handleUpload(/** @type {{ target: { files: FileList; }; }} */ e) {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const text = event.target?.result;
+            if (typeof text === 'string') {
+                this.setState({font: GfxFont.fromString(text)});
+            }
+        };
+        reader.readAsText(file);
+    }
+
     /**
      * @param {{ 
      *      font: GfxFont; 
      * }} props
      * @param {{
+     *      font: GfxFont | null
      *      glyph: GfxGlyph | null;
-     * }} state
+     * } | undefined} state
      */
-    render({ font }, {glyph}) {
+    render(props, state) {
+        const font = state?.font ?? props.font;
         return html`
             <main class="app">                
                 <h1>Font editor</h1>
                 <div>
+                    <label>
+                        Upload font file:
+                        <input type="file" accept=".h,.txt" onChange=${this.handleUpload} />
+                    </label>
                     <button onClick=${() => console.log(font?.serialize())}>Download</button>
                 </div>
                 <${FontEditor} font=${font} onSelectGlyph=${(/** @type {GfxGlyph} */ glyph) => this.setState({glyph})} />
-                <${GlyphEditor} glyph=${glyph} />
+                <${GlyphEditor} glyph=${state?.glyph} />
             </main>
         `;
     }
 }
 
+/**
+ * @extends {RefreshComponent<{font: GfxFont, onSelectGlyph(glyph: GfxGlyph): void }, any>}
+ */
 class FontEditor extends RefreshComponent {
     /**
      * @param {{ 
@@ -133,6 +162,9 @@ class CharacterTable extends Component {
     }
 }
 
+/**
+ * @extends {RefreshComponent<{glyph: GfxGlyph }, any>}
+ */
 class GlyphEditor extends RefreshComponent {
     /**
      * @param {{ glyph: GfxGlyph }} props
@@ -204,6 +236,9 @@ class GlyphEditor extends RefreshComponent {
     }
 }
 
+/**
+ * @extends {RefreshComponent<{glyph: GfxGlyph }, any>}
+ */
 class GlyphTable extends RefreshComponent {
     /**
      * @param {{ glyph: GfxGlyph }} props
