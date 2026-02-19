@@ -1,24 +1,10 @@
-import { useState } from "preact/hooks";
 import { GfxGlyph } from "./GfxGlyph";
 
-export function GlyphTable({
-  glyph,
-  onChange,
-}: {
-  glyph: GfxGlyph;
-  onChange?: () => void;
-}) {
-  const [, setRefresh] = useState(0);
-
-  const refresh = () => {
-    setRefresh((prev) => prev + 1);
-    onChange?.();
-  };
-
+export function GlyphTable({ glyph }: { glyph: GfxGlyph }) {
   return (
     <table id="glyph">
       <tbody>
-        {glyph.gfx.map((row, y) => (
+        {glyph.gfx.value.map((row, y) => (
           <tr key={y}>
             {row.map((cell, x) => (
               <td key={x}>
@@ -27,12 +13,10 @@ export function GlyphTable({
                   checked={cell ? true : false}
                   onChange={(e) => {
                     glyph.setPixel(x, y, e.currentTarget.checked);
-                    refresh();
                   }}
                   onMouseLeave={(e) => {
                     if (e.buttons) {
                       glyph.setPixel(x, y, !e.currentTarget.checked);
-                      refresh();
                     }
                   }}
                 />

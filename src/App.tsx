@@ -1,14 +1,21 @@
+import { signal } from "@preact/signals";
 import { useState } from "preact/hooks";
 import { FontEditor } from "./FontEditor";
-import { GfxFont, serialize } from "./GfxFont";
+import { gfxFontFromString } from "./gfx";
+import { GfxFont } from "./GfxFont";
 import { GfxGlyph } from "./GfxGlyph";
 import { GlyphEditor } from "./GlyphEditor";
 import { Preview } from "./Preview";
 
+const fontSignal = signal<GfxFont | null>(null);
+const glyphsSignal = signal<GfxGlyph[]>([]);
+
 export function App({ initialFont }: { initialFont: GfxFont | null }) {
-  const [font, setFont] = useState<GfxFont | null>(initialFont);
-  const [glyphs, setGlyphs] = useState<GfxGlyph[]>([]);
-  const [previewRefresh, setPreviewRefresh] = useState(0);
+  if (fontSignal.value === null && initialFont) {
+    fontSignal.value = initialFont;
+  }
+
+  const [, setRefresh] = useState(0);
 
   const handleUpload = (e: Event) => {
     const target = e.target as HTMLInputElement;
@@ -18,15 +25,18 @@ export function App({ initialFont }: { initialFont: GfxFont | null }) {
     reader.onload = (event) => {
       const text = event.target?.result;
       if (typeof text === "string") {
-        setFont(GfxFont.fromString(text));
+        fontSignal.value = gfxFontFromString(text);
+        glyphsSignal.value = [];
+        setRefresh((r) => r + 1);
       }
     };
     reader.readAsText(file);
   };
 
   const handleDownload = () => {
+    const font = fontSignal.value;
     if (!font) return;
-    const content = serialize(font);
+    const content = font.serialize();
     const blob = new Blob([content], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -37,18 +47,17 @@ export function App({ initialFont }: { initialFont: GfxFont | null }) {
   };
 
   const handleCloseGlyph = (glyph: GfxGlyph) => {
-    setGlyphs(glyphs.filter((g) => g !== glyph));
+    glyphsSignal.value = glyphsSignal.value.filter((g) => g !== glyph);
   };
 
   const handleSelectGlyph = (glyph: GfxGlyph) => {
-    if (!glyphs.includes(glyph)) {
-      setGlyphs([...glyphs, glyph]);
+    if (!glyphsSignal.value.includes(glyph)) {
+      glyphsSignal.value = [...glyphsSignal.value, glyph];
     }
   };
 
-  const refreshPreview = () => {
-    setPreviewRefresh((prev) => prev + 1);
-  };
+  const font = fontSignal.value;
+  const glyphs = glyphsSignal.value;
 
   return (
     <main class="app">
@@ -91,15 +100,14 @@ export function App({ initialFont }: { initialFont: GfxFont | null }) {
           Download font file
         </button>
       </div>
-      {font && <Preview font={font} refreshKey={previewRefresh} />}
+      {font && <Preview font={font} />}
       {font && <FontEditor font={font} onSelectGlyph={handleSelectGlyph} />}
       <div class="glyph-editors">
         {glyphs.map((glyph) => (
           <GlyphEditor
-            key={glyph.char}
+            key={glyph.char.value}
             glyph={glyph}
             onClose={() => handleCloseGlyph(glyph)}
-            onChange={refreshPreview}
           />
         ))}
       </div>

@@ -1,27 +1,19 @@
-import { useState } from "preact/hooks";
+import { computed } from "@preact/signals";
+import { toHex } from "./gfx";
 import { GfxGlyph } from "./GfxGlyph";
 import { GlyphTable } from "./GlyphTable";
 
 export function GlyphEditor({
   glyph,
   onClose,
-  onChange,
 }: {
   glyph: GfxGlyph;
   onClose?: () => void;
-  onChange?: () => void;
 }) {
-  const [, setRefresh] = useState(0);
-
-  const refresh = () => {
-    setRefresh((prev) => prev + 1);
-    onChange?.();
-  };
-
   return (
     <fieldset>
       <legend>
-        Glyph Editor
+        Edit {glyph.char} ({computed(() => toHex(glyph.char.value))})
         <button class="close-btn" onClick={onClose}>
           <svg
             width="14"
@@ -42,10 +34,9 @@ export function GlyphEditor({
         <input
           type="number"
           name="width"
-          value={glyph.width}
+          value={glyph.width.value}
           onInput={(e) => {
-            glyph.width = (e.target as HTMLInputElement).valueAsNumber;
-            refresh();
+            glyph.setWidth(e.currentTarget.valueAsNumber);
           }}
           min="1"
           max="255"
@@ -56,10 +47,9 @@ export function GlyphEditor({
         <input
           type="number"
           name="height"
-          value={glyph.height}
+          value={glyph.height.value}
           onInput={(e) => {
-            glyph.height = (e.target as HTMLInputElement).valueAsNumber;
-            refresh();
+            glyph.setHeight(e.currentTarget.valueAsNumber);
           }}
           min="1"
           max="255"
@@ -70,10 +60,9 @@ export function GlyphEditor({
         <input
           type="number"
           name="x-offset"
-          value={glyph.xOffset}
+          value={glyph.xOffset.value}
           onInput={(e) => {
-            glyph.xOffset = (e.target as HTMLInputElement).valueAsNumber;
-            refresh();
+            glyph.xOffset.value = e.currentTarget.valueAsNumber;
           }}
           min="-255"
           max="255"
@@ -84,10 +73,9 @@ export function GlyphEditor({
         <input
           type="number"
           name="y-offset"
-          value={glyph.yOffset}
+          value={glyph.yOffset.value}
           onInput={(e) => {
-            glyph.yOffset = (e.target as HTMLInputElement).valueAsNumber;
-            refresh();
+            glyph.yOffset.value = e.currentTarget.valueAsNumber;
           }}
           min="-255"
           max="255"
@@ -98,16 +86,15 @@ export function GlyphEditor({
         <input
           type="number"
           name="x-advance"
-          value={glyph.xAdvance}
+          value={glyph.xAdvance.value}
           onInput={(e) => {
-            glyph.xAdvance = (e.target as HTMLInputElement).valueAsNumber;
-            refresh();
+            glyph.xAdvance.value = e.currentTarget.valueAsNumber;
           }}
           min="0"
           max="255"
         />
       </label>
-      <GlyphTable glyph={glyph} onChange={refresh} />
+      <GlyphTable glyph={glyph} />
     </fieldset>
   );
 }

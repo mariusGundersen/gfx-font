@@ -1,136 +1,127 @@
-import { ParsedGlyph, toBytes } from "./gfx";
+import { signal } from '@preact/signals';
+import { ParsedGlyph, toBytes } from './gfx';
 
 
-export class GfxGlyph {
-  char: string;
-  glyph: ParsedGlyph;
-  gfx: boolean[][];
-  xAdvance: number;
-  xOffset: number;
-  yOffset: number;
+export function createGfxGlyph(
+  char: string,
+  bytes: number[] = [],
+  glyphData: ParsedGlyph = {
+    height: 0,
+    width: 0,
+    offset: 0,
+    xAdvance: 0,
+    xOffset: 0,
+    yOffset: 0,
+  }
+) {
+  const charSignal = signal(char);
+  const widthSignal = signal(glyphData.width);
+  const heightSignal = signal(glyphData.height);
+  const xAdvanceSignal = signal(glyphData.xAdvance);
+  const xOffsetSignal = signal(glyphData.xOffset);
+  const yOffsetSignal = signal(glyphData.yOffset);
+  const gfxSignal = signal<boolean[][]>(parseBytes(bytes, glyphData.width, glyphData.height));
 
-  constructor(
-    char: string,
-    bytes: number[] = [],
-    glyph: ParsedGlyph = {
-      height: 0,
-      width: 0,
-      offset: 0,
-      xAdvance: 0,
-      xOffset: 0,
-      yOffset: 0,
+  const getBytes = (): number[] => {
+    return toBytes(gfxSignal.value.flat());
+  };
+
+  const setPixel = (x: number, y: number, value: boolean) => {
+    const width = widthSignal.value;
+    const height = heightSignal.value;
+    if (x < 0 || y < 0 || x >= width || y >= height) {
+      return;
     }
-  ) {
-    this.char = char;
-    this.glyph = glyph;
-    this.gfx = [];
-    this.parseBytes(bytes);
-    this.xAdvance = glyph.xAdvance;
-    this.xOffset = glyph.xOffset;
-    this.yOffset = glyph.yOffset;
-  }
+    const newGfx = [...gfxSignal.value];
+    newGfx[y] = [...newGfx[y]];
+    newGfx[y][x] = value;
+    gfxSignal.value = newGfx;
+  };
 
-  parseBytes(bytes: number[]): void {
-    this.gfx = [];
-    let pix = 0;
-    let byte = 0;
-    let j = -1;
-    for (let y = 0; y < this.glyph.height; y++) {
-      const row: boolean[] = [];
-      for (let x = 0; x < this.glyph.width; x++) {
-        if (j < 0) {
-          j = 7;
-          byte = bytes[pix++];
-        }
-        const ink = ((byte >> j) & 1) ? true : false;
-
-        row.push(ink);
-        j--;
-      }
-
-      this.gfx.push(row);
-    }
-  }
-
-  getBytes(): number[] {
-    return toBytes(this.gfx.flat());
-  }
-
-  get width(): number {
-    return this.glyph.width;
-  }
-
-  set width(value: number) {
+  const setWidth = (value: number) => {
     if (value < 0) {
       throw new Error('Width must be a positive number');
     }
 
-    if (value < this.glyph.width) {
-      for (let y = 0; y < this.glyph.height; y++) {
-        this.gfx[y].splice(value);
-      }
-    } else if (value > this.glyph.width) {
-      for (let y = 0; y < this.glyph.height; y++) {
-        while (this.gfx[y].length < value) {
-          this.gfx[y].push(false);
-        }
-      }
+    const currentWidth = widthSignal.value;
+    if (value < currentWidth) {
+      const newGfx = gfxSignal.value.map((row) => row.slice(0, value));
+      gfxSignal.value = newGfx;
+    } else if (value > currentWidth) {
+      const newGfx = gfxSignal.value.map((row) => [...row, ...new Array(value - currentWidth).fill(false)]);
+      gfxSignal.value = newGfx;
     }
 
-    this.glyph.width = value;
-  }
+    widthSignal.value = value;
+  };
 
-  get height(): number {
-    return this.glyph.height;
-  }
-
-  set height(value: number) {
+  const setHeight = (value: number) => {
     if (value < 0) {
       throw new Error('Height must be a positive number');
     }
 
-    if (value < this.glyph.height) {
-      this.gfx.splice(value);
-    } else if (value > this.glyph.height) {
-      while (this.gfx.length < value) {
-        this.gfx.push(new Array(this.glyph.width).fill(false));
+    const currentHeight = heightSignal.value;
+    if (value < currentHeight) {
+      gfxSignal.value = gfxSignal.value.slice(0, value);
+    } else if (value > currentHeight) {
+      const width = widthSignal.value;
+      gfxSignal.value = [...gfxSignal.value, ...new Array(value - currentHeight).fill('x').map(() => new Array(width).fill(false))];
+    }
+
+    heightSignal.value = value;
+  };
+
+  return {
+    char: charSignal,
+    width: widthSignal,
+    height: heightSignal,
+    xAdvance: xAdvanceSignal,
+    xOffset: xOffsetSignal,
+    yOffset: yOffsetSignal,
+    gfx: gfxSignal,
+    getPixel: (x: number, y: number) => {
+      const height = heightSignal.value;
+      const width = widthSignal.value;
+      if (x < 0 || y < 0 || x >= width || y >= height) {
+        return false;
       }
-    }
-
-    this.glyph.height = value;
-  }
-
-  getPixel(x: number, y: number): boolean {
-    if (x < 0 || y < 0 || x >= this.width || y >= this.height) {
-      return false;
-    }
-    return this.gfx[y][x];
-  }
-
-  setPixel(x: number, y: number, value: boolean): void {
-    if (x < 0 || y < 0 || x >= this.width || y >= this.height) {
-      return;
-    }
-    this.gfx[y][x] = value;
-  }
-
-  serialize(): {
-    bytes: number[];
-    width: number;
-    height: number;
-    xAdvance: number;
-    xOffset: number;
-    yOffset: number;
-    char: string;
-  } {
-    return {
-      bytes: this.getBytes(),
-      width: this.width,
-      height: this.height,
-      xAdvance: this.xAdvance,
-      xOffset: this.xOffset,
-      yOffset: this.yOffset,
-      char: this.char,
-    };
-  }
+      return gfxSignal.value[y]?.[x] ?? false;
+    },
+    setPixel,
+    setWidth,
+    setHeight,
+    getBytes,
+    serialize: () => ({
+      bytes: getBytes(),
+      width: widthSignal.value,
+      height: heightSignal.value,
+      xAdvance: xAdvanceSignal.value,
+      xOffset: xOffsetSignal.value,
+      yOffset: yOffsetSignal.value,
+      char: charSignal.value,
+    }),
+  };
 }
+
+export type GfxGlyph = ReturnType<typeof createGfxGlyph>;
+
+const parseBytes = (bytes: number[], width: number, height: number) => {
+  const gfx: boolean[][] = [];
+  let pix = 0;
+  let byte = 0;
+  let j = -1;
+  for (let y = 0; y < height; y++) {
+    const row: boolean[] = [];
+    for (let x = 0; x < width; x++) {
+      if (j < 0) {
+        j = 7;
+        byte = bytes[pix++];
+      }
+      const ink = ((byte >> j) & 1) ? true : false;
+      row.push(ink);
+      j--;
+    }
+    gfx.push(row);
+  }
+  return gfx;
+};

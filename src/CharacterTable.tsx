@@ -1,4 +1,4 @@
-import { GfxFont } from "./GfxFont";
+import { GfxFont } from "./gfx";
 import { GfxGlyph } from "./GfxGlyph";
 
 export function CharacterTable({
@@ -28,13 +28,13 @@ export function CharacterTable({
                   onClick={() => glyph && onSelectGlyph(glyph)}
                   style={{
                     background: glyph
-                      ? glyph.width === 0 || glyph.height === 0
+                      ? glyph.width.value === 0 || glyph.height.value === 0
                         ? "#ccc"
                         : "#cec"
                       : "#ecc",
                   }}
                 >
-                  {glyph?.char ?? ""}
+                  {glyph?.char.value ?? ""}
                 </td>
               );
             })}

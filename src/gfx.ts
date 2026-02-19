@@ -1,3 +1,4 @@
+import { GfxFont, createGfxFont } from './GfxFont';
 
 export interface ParsedGlyph {
   offset: number;
@@ -17,7 +18,7 @@ export interface ParsedFont {
   bitmaps: number[];
 }
 
-export function parseFont(cCode: string): ParsedFont {
+function parseFont(cCode: string): ParsedFont {
   const tokens = cCode.split(/\s+/);
 
   const getNextToken = (): string => {
@@ -140,4 +141,14 @@ export function toBytes(bits: boolean[]): number[] {
     bytes.push(byte);
   }
   return bytes;
+}
+
+
+export function gfxFontFromString(fontString: string): GfxFont {
+  return createGfxFont(parseFont(fontString));
+}
+
+export function toHex(value: number | string): string {
+  const hex = (typeof value === 'string' ? value.charCodeAt(0) : value).toString(16);
+  return `0x${hex.length % 2 === 1 ? '0' : ''}${hex}`;
 }
