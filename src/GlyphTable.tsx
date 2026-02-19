@@ -1,6 +1,8 @@
+import { useRef } from "preact/hooks";
 import { GfxGlyph } from "./GfxGlyph";
 
 export function GlyphTable({ glyph }: { glyph: GfxGlyph }) {
+  const drawState = useRef<boolean>(false);
   return (
     <table id="glyph">
       <tbody>
@@ -14,9 +16,17 @@ export function GlyphTable({ glyph }: { glyph: GfxGlyph }) {
                   onChange={(e) => {
                     glyph.setPixel(x, y, e.currentTarget.checked);
                   }}
+                  onMouseDown={(e) => {
+                    drawState.current = !e.currentTarget.checked;
+                  }}
+                  onMouseEnter={(e) => {
+                    if (e.buttons) {
+                      glyph.setPixel(x, y, drawState.current);
+                    }
+                  }}
                   onMouseLeave={(e) => {
                     if (e.buttons) {
-                      glyph.setPixel(x, y, !e.currentTarget.checked);
+                      glyph.setPixel(x, y, drawState.current);
                     }
                   }}
                 />
