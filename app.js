@@ -18,10 +18,10 @@ class RefreshComponent extends Component {
     /**
      * @param {Function} callback
      */
-    refresh(callback){
+    refresh(callback) {
         return (/** @type {any} */ ...args) => {
             callback?.(...args);
-            this.setState({refresh: (this.state.refresh || 0) + 1});
+            this.setState({ refresh: (this.state.refresh || 0) + 1 });
         }
     }
 }
@@ -34,9 +34,9 @@ class App extends RefreshComponent {
     /**
      * @param {{ font: GfxFont; } | undefined} props
      */
-    constructor(props){
+    constructor(props) {
         super(props);
-        this.setState({font: props?.font ?? null, glyphs: []});
+        this.setState({ font: props?.font ?? null, glyphs: [] });
     }
 
     handleUpload = (/** @type {{ target: { files: FileList; }; }} */ e) => {
@@ -46,14 +46,14 @@ class App extends RefreshComponent {
         reader.onload = (event) => {
             const text = event.target?.result;
             if (typeof text === 'string') {
-                this.setState({font: GfxFont.fromString(text)});
+                this.setState({ font: GfxFont.fromString(text) });
             }
         };
         reader.readAsText(file);
     }
-    
+
     handleDownload = () => {
-        if(!this.state.font) return;
+        if (!this.state.font) return;
         const content = this.state.font.serialize();
         const blob = new Blob([content], { type: 'text/plain' });
         const url = URL.createObjectURL(blob);
@@ -65,7 +65,11 @@ class App extends RefreshComponent {
     };
 
     handleCloseGlyph = (/** @type {GfxGlyph} */ glyph) => {
-        this.setState({glyphs: this.state.glyphs.filter(g => g !== glyph)});
+        this.setState({ glyphs: this.state.glyphs.filter(g => g !== glyph) });
+    }
+
+    refreshPreview = () => {
+        this.setState({ previewRefresh: (this.state.previewRefresh || 0) + 1 });
     }
 
     /**
@@ -102,9 +106,10 @@ class App extends RefreshComponent {
                         Download font file
                     </button>
                 </div>
-                <${FontEditor} font=${font} onSelectGlyph=${(/** @type {GfxGlyph} */ glyph) => this.setState({glyphs: [...(this.state.glyphs ?? []), glyph].filter((g, i, e) => e.indexOf(g) === i)})} />
+                <${Preview} font=${font} refreshKey=${state?.previewRefresh} />
+                <${FontEditor} font=${font} onSelectGlyph=${(/** @type {GfxGlyph} */ glyph) => this.setState({ glyphs: [...(this.state.glyphs ?? []), glyph].filter((g, i, e) => e.indexOf(g) === i) })} />
                 <div class="glyph-editors">
-                    ${glyphs.map(glyph => html`<${GlyphEditor} key=${glyph.char} glyph=${glyph} onClose=${() => this.handleCloseGlyph(glyph)} />`)}
+                    ${glyphs.map(glyph => html`<${GlyphEditor} key=${glyph.char} glyph=${glyph} onClose=${() => this.handleCloseGlyph(glyph)} onChange=${this.refreshPreview} />`)}
                 </div>
             </main>
         `;
@@ -167,21 +172,20 @@ class CharacterTable extends Component {
      * @param {{ font: GfxFont; onSelectGlyph: (glyph: GfxGlyph) => void; }} props
      * @param {any} state
      */
-    render(props, state){
+    render(props, state) {
         return html`
             <table id="characters">
                 <tr>
                     <th></th>
-                    ${
-                        new Array(16).fill(0).map((_, i) => html`<th>${`_${i.toString(16)}`}</th>`)
-                    }
+                    ${new Array(16).fill(0).map((_, i) => html`<th>${`_${i.toString(16)}`}</th>`)
+            }
                 </tr>
                 ${new Array(16).fill(0).map((_, i) => html`
                     <tr>
                         <th>${`${i.toString(16)}_`}</th>
                         ${new Array(16).fill(0)
-                            .map((_, j) => props.font.getGlyph(i * 16 + j))
-                            .map((glyph) => html`
+                    .map((_, j) => props.font.getGlyph(i * 16 + j))
+                    .map((glyph) => html`
                                 <td 
                                     onClick=${glyph && (() => props.onSelectGlyph(glyph))} 
                                     style=${{ background: glyph ? glyph.width === 0 || glyph.height === 0 ? '#ccc' : '#cec' : '#ecc' }}
@@ -189,7 +193,7 @@ class CharacterTable extends Component {
                                     ${glyph?.char ?? ''}
                                 </td>
                             `)
-                        }
+                }
                     </tr>
                 `)}
             </table>
@@ -198,14 +202,18 @@ class CharacterTable extends Component {
 }
 
 /**
- * @extends {RefreshComponent<{glyph: GfxGlyph, onClose?: () => void }, any>}
+ * @extends {RefreshComponent<{glyph: GfxGlyph, onClose?: () => void, onChange?: () => void }, any>}
  */
 class GlyphEditor extends RefreshComponent {
     /**
-     * @param {{ glyph: GfxGlyph, onClose?: () => void }} props
+     * @param {{ glyph: GfxGlyph, onClose?: () => void, onChange?: () => void }} props
      * @param {any} state
      */
-    render({glyph, onClose}, state){
+    render({ glyph, onClose, onChange }, state) {
+        const refreshAndNotify = (/** @type {Function} */callback) => this.refresh((/** @type {any} */ ...args) => {
+            callback(...args);
+            onChange?.();
+        });
         return html`
             <fieldset>
                 <legend>
@@ -224,7 +232,7 @@ class GlyphEditor extends RefreshComponent {
                         type="number" 
                         name="width"
                         value=${glyph?.width ?? 8}
-                        onChange=${this.refresh((/** @type {{ target: { valueAsNumber: number; }; }} */ e) => { glyph.width = e.target.valueAsNumber; })} 
+                        onChange=${refreshAndNotify((/** @type {{ target: { valueAsNumber: number; }; }} */ e) => { glyph.width = e.target.valueAsNumber; })} 
                         min="1"
                         max="255"
                     />
@@ -235,7 +243,7 @@ class GlyphEditor extends RefreshComponent {
                         type="number" 
                         name="height"
                         value=${glyph?.height ?? 8}
-                        onChange=${this.refresh((/** @type {{ target: { valueAsNumber: number; }; }} */ e) => { glyph.height = e.target.valueAsNumber; })} 
+                        onChange=${refreshAndNotify((/** @type {{ target: { valueAsNumber: number; }; }} */ e) => { glyph.height = e.target.valueAsNumber; })}
                         min="1"
                         max="255"
                     />
@@ -246,7 +254,7 @@ class GlyphEditor extends RefreshComponent {
                         type="number" 
                         name="x-offset"
                         value=${glyph?.xOffset ?? 0}
-                        onChange=${this.refresh((/** @type {{ target: { valueAsNumber: number; }; }} */ e) => { glyph.xOffset = e.target.valueAsNumber; })} 
+                        onChange=${refreshAndNotify((/** @type {{ target: { valueAsNumber: number; }; }} */ e) => { glyph.xOffset = e.target.valueAsNumber; })} 
                         min="-255"
                         max="255"
                     />
@@ -257,7 +265,7 @@ class GlyphEditor extends RefreshComponent {
                         type="number" 
                         name="y-offset"
                         value=${glyph?.yOffset ?? 0}
-                        onChange=${this.refresh((/** @type {{ target: { valueAsNumber: number; }; }} */ e) => { glyph.yOffset = e.target.valueAsNumber; })} 
+                        onChange=${refreshAndNotify((/** @type {{ target: { valueAsNumber: number; }; }} */ e) => { glyph.yOffset = e.target.valueAsNumber; })} 
                         min="-255"
                         max="255"
                     />
@@ -268,26 +276,30 @@ class GlyphEditor extends RefreshComponent {
                         type="number" 
                         name="x-advance"
                         value=${glyph?.xAdvance ?? 8}
-                        onChange=${this.refresh((/** @type {{ target: { valueAsNumber: number; }; }} */ e) => { glyph.xAdvance = e.target.valueAsNumber; })} 
+                        onChange=${refreshAndNotify((/** @type {{ target: { valueAsNumber: number; }; }} */ e) => { glyph.xAdvance = e.target.valueAsNumber; })}
                         min="0"
                         max="255"
                     />
                 </label>
-                <${GlyphTable} glyph=${glyph} />
+                <${GlyphTable} glyph=${glyph} onChange=${onChange} />
             </fieldset>
         `;
     }
 }
 
 /**
- * @extends {RefreshComponent<{glyph: GfxGlyph }, any>}
+ * @extends {RefreshComponent<{glyph: GfxGlyph, onChange?: () => void }, any>}
  */
 class GlyphTable extends RefreshComponent {
     /**
-     * @param {{ glyph: GfxGlyph }} props
+     * @param {{ glyph: GfxGlyph, onChange?: () => void }} props
      * @param {any} state
      */
-    render({glyph}, state){
+    render({ glyph, onChange }, state) {
+        const refreshAndNotify = (/** @type {Function} */callback) => this.refresh((/** @type {any} */ ...args) => {
+            callback(...args);
+            onChange?.();
+        });
         return html`
             <table id="glyph">
                 ${glyph?.gfx.map((r, y) => html`
@@ -297,8 +309,8 @@ class GlyphTable extends RefreshComponent {
                                 <input 
                                     type="checkbox" 
                                     checked=${c ? 'checked' : ''} 
-                                    onChange=${this.refresh((/** @type {{ target: { checked: boolean; }; }} */ e) => { glyph.setPixel(x, y, e.target.checked); })}
-                                    onMouseLeave=${this.refresh((/** @type {{ target: { checked: boolean }; buttons: number }} */ e) => { e.buttons && glyph.setPixel(x, y, !e.target.checked); })}
+                                    onChange=${refreshAndNotify((/** @type {{ target: { checked: boolean; }; }} */ e) => { glyph.setPixel(x, y, e.target.checked); })}
+                                    onMouseLeave=${refreshAndNotify((/** @type {{ target: { checked: boolean }; buttons: number }} */ e) => { e.buttons && glyph.setPixel(x, y, !e.target.checked); })}
                                 />
                             </td>
                         `)}
@@ -306,6 +318,82 @@ class GlyphTable extends RefreshComponent {
                 `)}
             </table>
         `
+    }
+}
+
+class Preview extends RefreshComponent {
+    /**
+     * @param {{ font: GfxFont | null | undefined, refreshKey?: number }} props
+     */
+    render({ font, refreshKey }) {
+        if (!font) return null;
+
+        const renderCanvas = (/** @type {HTMLCanvasElement} */ canvas) => {
+            if (!canvas || !font) return;
+            const ctx = canvas.getContext('2d');
+            if (!ctx) return;
+
+            const padding = 10;
+            const scale = 2;
+
+            const text = this.state?.previewText || 'The quick brown fox jumps over the lazy dog';
+            const fontHeight = font.yAdvance;
+            const lines = text.split('\n');
+            const maxWidth = Math.max(...lines.map(line => {
+                let width = 0;
+                for (let char = 0; char < line.length; char++) {
+                    const glyph = font.getGlyph(line.charCodeAt(char));
+                    width += glyph?.xAdvance || 0;
+                }
+                return width;
+            }));
+
+            canvas.width = (maxWidth + padding * 2) * scale;
+            canvas.height = (lines.length * (fontHeight) + padding * 2) * scale;
+
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#fff';
+
+            ctx.scale(scale, scale);
+            let y = fontHeight;
+            for (const line of lines) {
+                let x = padding;
+                for (let char = 0; char < line.length; char++) {
+                    const glyph = font.getGlyph(line.charCodeAt(char));
+                    if (glyph) {
+                        for (let gy = 0; gy < glyph.height; gy++) {
+                            for (let gx = 0; gx < glyph.width; gx++) {
+                                if (glyph.gfx[gy]?.[gx]) {
+                                    ctx.fillRect(x + gx + glyph.xOffset, y + gy + glyph.yOffset, 1, 1);
+                                }
+                            }
+                        }
+                    }
+                    x += glyph?.xAdvance || 0;
+                }
+                y += fontHeight;
+            }
+        };
+
+        const handleInput = (/** @type {{ target: { value: string; }; }} */ e) => {
+            this.setState({ previewText: e.target.value });
+            setTimeout(() => {
+                const canvas = document.querySelector('fieldset:nth-of-type(2) canvas');
+                if (canvas) renderCanvas(/** @type {HTMLCanvasElement} */(canvas));
+            }, 0);
+        };
+
+        return html`
+            <fieldset>
+                <legend>Preview</legend>
+                <textarea 
+                    rows="3"
+                    onInput=${handleInput}
+                >The quick brown fox jumps over the lazy dog</textarea>
+                <canvas key=${refreshKey} ref=${renderCanvas}></canvas>
+            </fieldset>
+        `;
     }
 }
 
