@@ -1,0 +1,71 @@
+button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+button.close-btn {
+  float: right;
+  padding: 2px 6px;
+  background: transparent;
+  border: none;
+}
+
+.glyph-editors {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+
+  fieldset {
+    display: grid;
+    grid-template-columns: repeat(2, fit-content(100px));
+    align-content: start;
+
+    label {
+      display: grid;
+      grid-template-columns: subgrid;
+      grid-column: 1/-1;
+      justify-content: space-between;
+    }
+
+    legend,
+    table {
+      grid-column: 1 / -1;
+    }
+  }
+}
+
+table#characters td {
+  cursor: pointer;
+  text-align: center;
+}
+
+table#characters td:empty {
+  cursor: not-allowed;
+}
+
+table#glyph {
+  line-height: 0;
+}
+
+table#glyph td {
+  padding: 0;
+}
+
+table#glyph input {
+  margin: 0;
+}
+
+fieldset textarea {
+  display: block;
+  width: 100%;
+  margin-bottom: 10px;
+  font-family: monospace;
+}
+
+fieldset canvas {
+  display: block;
+  image-rendering: pixelated;
+}
