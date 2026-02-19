@@ -49,6 +49,19 @@ export function FontEditor({
           max="255"
         />
       </label>
+      <label>
+        <span>Y Advance</span>
+        <input
+          type="number"
+          name="first-char"
+          value={font.yAdvance}
+          onInput={(e) => {
+            font.yAdvance = e.currentTarget.valueAsNumber;
+          }}
+          min="0"
+          max="255"
+        />
+      </label>
       <CharacterTable font={font} onSelectGlyph={onSelectGlyph} />
     </fieldset>
   );

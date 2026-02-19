@@ -1,15 +1,23 @@
 import { computed, ReadonlySignal, signal } from '@preact/signals';
 import { ParsedGlyph, toBytes } from './gfx';
 
+interface SerializedGlyph {
+  width: number;
+  height: number;
+  xAdvance: number;
+  xOffset: number;
+  yOffset: number;
+  bytes: number[]
+}
 
 export function createGfxGlyph(
   char: string,
   bytes: number[] = [],
   glyphData: ParsedGlyph = {
-    height: 8,
-    width: 8,
+    height: 0,
+    width: 0,
     offset: 0,
-    xAdvance: 9,
+    xAdvance: 0,
     xOffset: 0,
     yOffset: 0,
   }
@@ -96,6 +104,14 @@ export function createGfxGlyph(
       yOffset: yOffsetSignal.value,
       char,
     }),
+    copyFrom({ bytes, width, height, xAdvance, xOffset, yOffset }: SerializedGlyph) {
+      gfxSignal.value = parseBytes(bytes, width, height);
+      widthSignal.value = width;
+      heightSignal.value = height;
+      xAdvanceSignal.value = xAdvance;
+      xOffsetSignal.value = xOffset;
+      yOffsetSignal.value = yOffset;
+    }
   };
 }
 

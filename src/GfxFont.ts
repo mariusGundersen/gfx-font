@@ -107,7 +107,6 @@ const GFXfont ${name} PROGMEM = {
   ${toHex(first)}, ${toHex(last)}, ${yAdvance} };
       `.trim();
     },
-    _glyphs: glyphsSignal,
   };
 }
 

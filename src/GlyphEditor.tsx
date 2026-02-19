@@ -7,9 +7,11 @@ import { CloseIcon } from "./icons";
 export function GlyphEditor({
   glyph,
   onClose,
+  copyFrom,
 }: {
   glyph: GfxGlyph;
   onClose?: () => void;
+  copyFrom(glyph: number): void;
 }) {
   return (
     <fieldset>
@@ -87,6 +89,18 @@ export function GlyphEditor({
         />
       </label>
       <GlyphTable glyph={glyph} />
+      {glyph.width.value === 0 && glyph.height.value === 0 && (
+        <label>
+          Copy from
+          <select onChange={(e) => copyFrom(parseInt(e.currentTarget.value))}>
+            {new Array(256).fill(0).map((_, i) => (
+              <option value={i}>
+                {String.fromCharCode(i)} ({toHex(i)})
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
     </fieldset>
   );
 }

@@ -115,7 +115,7 @@ function parseFont(cCode: string): ParsedFont {
       last = expectNumber();
       yAdvance = expectNumber();
       expectToken('};');
-      token = getNextToken();
+      //token = getNextToken();
     } else {
       token = getNextToken();
     }

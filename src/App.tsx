@@ -79,7 +79,6 @@ export function App({ initialFont }: { initialFont: GfxFont | null }) {
           Download font file
         </button>
       </div>
-      {font && <Preview font={font} />}
       {font && <FontEditor font={font} onSelectGlyph={handleSelectGlyph} />}
       <div class="glyph-editors">
         {glyphs.map((glyph) => (
@@ -87,15 +86,17 @@ export function App({ initialFont }: { initialFont: GfxFont | null }) {
             key={glyph.char}
             glyph={glyph}
             onClose={() => handleCloseGlyph(glyph)}
+            copyFrom={(source) =>
+              glyph.copyFrom(font!.getGlyph(source)!.serialize())
+            }
           />
         ))}
       </div>
+      {font && <Preview font={font} />}
     </main>
   );
 }
 
 function clickNextInput(e: { currentTarget: HTMLElement }) {
-  return e.currentTarget.nextElementSibling?.dispatchEvent(
-    new Event("click", { bubbles: true }),
-  );
+  return (e.currentTarget.nextElementSibling as HTMLInputElement).click();
 }
