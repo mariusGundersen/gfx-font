@@ -1,5 +1,6 @@
 import { CharacterTable } from "./CharacterTable";
-import { GfxFont, GfxGlyph } from "./gfx";
+import { GfxFont } from "./GfxFont";
+import { GfxGlyph } from "./GfxGlyph";
 
 export function FontEditor({
   font,
@@ -18,7 +19,7 @@ export function FontEditor({
           name="name"
           value={font.name}
           onInput={(e) => {
-            font.name = (e.target as HTMLInputElement).value;
+            font.name = e.currentTarget.value;
           }}
         />
       </label>
@@ -29,7 +30,7 @@ export function FontEditor({
           name="first-char"
           value={font.first}
           onInput={(e) => {
-            font.first = (e.target as HTMLInputElement).valueAsNumber;
+            font.first = e.currentTarget.valueAsNumber;
           }}
           min="1"
           max="255"
@@ -42,7 +43,7 @@ export function FontEditor({
           name="last-char"
           value={font.last}
           onInput={(e) => {
-            font.last = (e.target as HTMLInputElement).valueAsNumber;
+            font.last = e.currentTarget.valueAsNumber;
           }}
           min="1"
           max="255"

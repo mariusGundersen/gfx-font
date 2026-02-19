@@ -1,5 +1,5 @@
 import { useState } from "preact/hooks";
-import { GfxGlyph } from "./gfx";
+import { GfxGlyph } from "./GfxGlyph";
 
 export function GlyphTable({
   glyph,
@@ -26,20 +26,12 @@ export function GlyphTable({
                   type="checkbox"
                   checked={cell ? true : false}
                   onChange={(e) => {
-                    glyph.setPixel(
-                      x,
-                      y,
-                      (e.target as HTMLInputElement).checked,
-                    );
+                    glyph.setPixel(x, y, e.currentTarget.checked);
                     refresh();
                   }}
                   onMouseLeave={(e) => {
-                    if ((e as MouseEvent).buttons) {
-                      glyph.setPixel(
-                        x,
-                        y,
-                        !(e.target as HTMLInputElement).checked,
-                      );
+                    if (e.buttons) {
+                      glyph.setPixel(x, y, !e.currentTarget.checked);
                       refresh();
                     }
                   }}

@@ -1,6 +1,6 @@
 import { render } from "preact";
 import { App } from "./App";
-import { GfxFont } from "./gfx";
+import { GfxFont } from "./GfxFont";
 
 async function main() {
   const font = GfxFont.fromString(

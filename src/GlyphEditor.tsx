@@ -1,6 +1,6 @@
 import { useState } from "preact/hooks";
+import { GfxGlyph } from "./GfxGlyph";
 import { GlyphTable } from "./GlyphTable";
-import { GfxGlyph } from "./gfx";
 
 export function GlyphEditor({
   glyph,

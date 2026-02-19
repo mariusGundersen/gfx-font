@@ -1,6 +1,7 @@
 import { useState } from "preact/hooks";
 import { FontEditor } from "./FontEditor";
-import { GfxFont, GfxGlyph } from "./gfx";
+import { GfxFont, serialize } from "./GfxFont";
+import { GfxGlyph } from "./GfxGlyph";
 import { GlyphEditor } from "./GlyphEditor";
 import { Preview } from "./Preview";
 
@@ -25,7 +26,7 @@ export function App({ initialFont }: { initialFont: GfxFont | null }) {
 
   const handleDownload = () => {
     if (!font) return;
-    const content = font.serialize();
+    const content = serialize(font);
     const blob = new Blob([content], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -53,13 +54,7 @@ export function App({ initialFont }: { initialFont: GfxFont | null }) {
     <main class="app">
       <h1>Font editor</h1>
       <div>
-        <button
-          onClick={(e) =>
-            (e.target as HTMLElement).nextElementSibling?.dispatchEvent(
-              new Event("click", { bubbles: true }),
-            )
-          }
-        >
+        <button onClick={clickNextInput}>
           <svg
             width="16"
             height="16"
@@ -109,5 +104,11 @@ export function App({ initialFont }: { initialFont: GfxFont | null }) {
         ))}
       </div>
     </main>
+  );
+}
+
+function clickNextInput(e: { currentTarget: HTMLElement }) {
+  return e.currentTarget.nextElementSibling?.dispatchEvent(
+    new Event("click", { bubbles: true }),
   );
 }

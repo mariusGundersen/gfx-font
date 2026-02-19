@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "preact/hooks";
-import { GfxFont } from "./gfx";
+import { GfxFont } from "./GfxFont";
 
 export function Preview({
   font,
@@ -51,7 +51,7 @@ export function Preview({
         if (glyph) {
           for (let gy = 0; gy < glyph.height; gy++) {
             for (let gx = 0; gx < glyph.width; gx++) {
-              if (glyph.gfx[gy]?.[gx]) {
+              if (glyph.getPixel(gx, gy)) {
                 ctx.fillRect(
                   x + gx + glyph.xOffset,
                   y + gy + glyph.yOffset,

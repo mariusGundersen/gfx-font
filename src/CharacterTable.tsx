@@ -1,4 +1,5 @@
-import { GfxFont, GfxGlyph } from "./gfx";
+import { GfxFont } from "./GfxFont";
+import { GfxGlyph } from "./GfxGlyph";
 
 export function CharacterTable({
   font,
