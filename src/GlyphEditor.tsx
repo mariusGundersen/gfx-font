@@ -15,7 +15,7 @@ export function GlyphEditor({
     <fieldset>
       <legend>
         <strong>{glyph.char}</strong>{" "}
-        <code>({computed(() => toHex(glyph.char.value))})</code>
+        <code>({computed(() => toHex(glyph.char))})</code>
         <button class="close-btn" onClick={onClose}>
           <CloseIcon />
         </button>

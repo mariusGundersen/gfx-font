@@ -1,4 +1,4 @@
-import { signal } from '@preact/signals';
+import { computed, ReadonlySignal, signal } from '@preact/signals';
 import { ParsedGlyph, toBytes } from './gfx';
 
 
@@ -6,25 +6,20 @@ export function createGfxGlyph(
   char: string,
   bytes: number[] = [],
   glyphData: ParsedGlyph = {
-    height: 0,
-    width: 0,
+    height: 8,
+    width: 8,
     offset: 0,
-    xAdvance: 0,
+    xAdvance: 9,
     xOffset: 0,
     yOffset: 0,
   }
 ) {
-  const charSignal = signal(char);
   const widthSignal = signal(glyphData.width);
   const heightSignal = signal(glyphData.height);
   const xAdvanceSignal = signal(glyphData.xAdvance);
   const xOffsetSignal = signal(glyphData.xOffset);
   const yOffsetSignal = signal(glyphData.yOffset);
   const gfxSignal = signal<boolean[][]>(parseBytes(bytes, glyphData.width, glyphData.height));
-
-  const getBytes = (): number[] => {
-    return toBytes(gfxSignal.value.flat());
-  };
 
   const setPixel = (x: number, y: number, value: boolean) => {
     const width = widthSignal.value;
@@ -72,13 +67,15 @@ export function createGfxGlyph(
   };
 
   return {
-    char: charSignal,
-    width: widthSignal,
-    height: heightSignal,
+    get char() {
+      return char;
+    },
+    width: widthSignal as ReadonlySignal<number>,
+    height: heightSignal as ReadonlySignal<number>,
     xAdvance: xAdvanceSignal,
     xOffset: xOffsetSignal,
     yOffset: yOffsetSignal,
-    gfx: gfxSignal,
+    rows: computed(() => gfxSignal.value.map((r) => r.map((_, i) => i))),
     getPixel: (x: number, y: number) => {
       const height = heightSignal.value;
       const width = widthSignal.value;
@@ -90,15 +87,14 @@ export function createGfxGlyph(
     setPixel,
     setWidth,
     setHeight,
-    getBytes,
     serialize: () => ({
-      bytes: getBytes(),
+      bytes: toBytes(gfxSignal.value.flat()),
       width: widthSignal.value,
       height: heightSignal.value,
       xAdvance: xAdvanceSignal.value,
       xOffset: xOffsetSignal.value,
       yOffset: yOffsetSignal.value,
-      char: charSignal.value,
+      char,
     }),
   };
 }

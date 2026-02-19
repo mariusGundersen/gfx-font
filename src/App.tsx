@@ -5,8 +5,8 @@ import { gfxFontFromString } from "./gfx";
 import { GfxFont } from "./GfxFont";
 import { GfxGlyph } from "./GfxGlyph";
 import { GlyphEditor } from "./GlyphEditor";
-import { Preview } from "./Preview";
 import { DownloadIcon, UploadIcon } from "./icons";
+import { Preview } from "./Preview";
 
 const fontSignal = signal<GfxFont | null>(null);
 const glyphsSignal = signal<GfxGlyph[]>([]);
@@ -84,7 +84,7 @@ export function App({ initialFont }: { initialFont: GfxFont | null }) {
       <div class="glyph-editors">
         {glyphs.map((glyph) => (
           <GlyphEditor
-            key={glyph.char.value}
+            key={glyph.char}
             glyph={glyph}
             onClose={() => handleCloseGlyph(glyph)}
           />

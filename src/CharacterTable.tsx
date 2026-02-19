@@ -1,4 +1,4 @@
-import { GfxFont } from "./gfx";
+import { GfxFont } from "./GfxFont";
 import { GfxGlyph } from "./GfxGlyph";
 
 export function CharacterTable({
@@ -34,7 +34,7 @@ export function CharacterTable({
                       : "#ecc",
                   }}
                 >
-                  {glyph?.char.value ?? ""}
+                  {glyph?.char ?? ""}
                 </td>
               );
             })}

@@ -4,13 +4,13 @@ export function GlyphTable({ glyph }: { glyph: GfxGlyph }) {
   return (
     <table id="glyph">
       <tbody>
-        {glyph.gfx.value.map((row, y) => (
+        {glyph.rows.value.map((cols, y) => (
           <tr key={y}>
-            {row.map((cell, x) => (
+            {cols.map((x) => (
               <td key={x}>
                 <input
                   type="checkbox"
-                  checked={cell ? true : false}
+                  checked={glyph.getPixel(x, y) ? true : false}
                   onChange={(e) => {
                     glyph.setPixel(x, y, e.currentTarget.checked);
                   }}
