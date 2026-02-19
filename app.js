@@ -27,7 +27,7 @@ class RefreshComponent extends Component {
 }
 
 /**
- * @extends {RefreshComponent<{font: GfxFont}, {font: GfxFont | null, glyph: GfxGlyph | null}>}
+ * @extends {RefreshComponent<{font: GfxFont}, {font: GfxFont | null, glyphs: GfxGlyph[]}>}
  */
 class App extends RefreshComponent {
 
@@ -36,7 +36,7 @@ class App extends RefreshComponent {
      */
     constructor(props){
         super(props);
-        this.setState({font: props?.font ?? null});
+        this.setState({font: props?.font ?? null, glyphs: []});
     }
 
     handleUpload = (/** @type {{ target: { files: FileList; }; }} */ e) => {
@@ -64,22 +64,27 @@ class App extends RefreshComponent {
         URL.revokeObjectURL(url);
     };
 
+    handleCloseGlyph = (/** @type {GfxGlyph} */ glyph) => {
+        this.setState({glyphs: this.state.glyphs.filter(g => g !== glyph)});
+    }
+
     /**
      * @param {{ 
      *      font: GfxFont; 
      * }} _
      * @param {{
      *      font: GfxFont | null
-     *      glyph: GfxGlyph | null;
+     *      glyphs: GfxGlyph[];
      * } | undefined} state
      */
     render(_, state) {
         const font = state?.font;
+        const glyphs = state?.glyphs ?? [];
         return html`
             <main class="app">                
                 <h1>Font editor</h1>
                 <div>
-                    <button onClick=${(e) => e.currentTarget.nextElementSigbling.click()}>
+                    <button onClick=${(e) => e.currentTarget.nextElementSibling.click()}>
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                             <polyline points="17 8 12 3 7 8"/>
@@ -97,8 +102,10 @@ class App extends RefreshComponent {
                         Download font file
                     </button>
                 </div>
-                <${FontEditor} font=${font} onSelectGlyph=${(/** @type {GfxGlyph} */ glyph) => this.setState({glyph})} />
-                <${GlyphEditor} glyph=${state?.glyph} />
+                <${FontEditor} font=${font} onSelectGlyph=${(/** @type {GfxGlyph} */ glyph) => this.setState({glyphs: [...(this.state.glyphs ?? []), glyph].filter((g, i, e) => e.indexOf(g) === i)})} />
+                <div class="glyph-editors">
+                    ${glyphs.map(glyph => html`<${GlyphEditor} key=${glyph.char} glyph=${glyph} onClose=${() => this.handleCloseGlyph(glyph)} />`)}
+                </div>
             </main>
         `;
     }
@@ -191,17 +198,25 @@ class CharacterTable extends Component {
 }
 
 /**
- * @extends {RefreshComponent<{glyph: GfxGlyph }, any>}
+ * @extends {RefreshComponent<{glyph: GfxGlyph, onClose?: () => void }, any>}
  */
 class GlyphEditor extends RefreshComponent {
     /**
-     * @param {{ glyph: GfxGlyph }} props
+     * @param {{ glyph: GfxGlyph, onClose?: () => void }} props
      * @param {any} state
      */
-    render({glyph}, state){
+    render({glyph, onClose}, state){
         return html`
             <fieldset>
-                <legend>Glyph Editor</legend>
+                <legend>
+                    Glyph Editor
+                    <button class="close-btn" onClick=${onClose}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18"/>
+                            <line x1="6" y1="6" x2="18" y2="18"/>
+                        </svg>
+                    </button>
+                </legend>
                 
                 <label>
                     <span>Width</span>

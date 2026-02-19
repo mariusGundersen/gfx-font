@@ -12,6 +12,28 @@
             padding: 8px 12px;
             cursor: pointer;
         }
+        button.close-btn {
+            float: right;
+            padding: 2px 6px;
+            background: transparent;
+            border: none;
+        }
+        .glyph-editors {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+
+            fieldset {
+                legend {
+                    width: 100%;
+                }
+            }
+        }
+
+        label {
+            display: flex;
+            justify-content: space-between;
+        }
         table#characters {
             td {
                 cursor: pointer;
