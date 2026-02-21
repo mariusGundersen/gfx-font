@@ -1,0 +1,33 @@
+.font-list {
+  border-collapse: collapse;
+
+  th {
+    text-align: left;
+  }
+
+  tr {
+    cursor: pointer;
+
+    &:nth-child(even) {
+      background: #f0f0f0;
+    }
+
+    &:hover {
+      background: #ded;
+      text-decoration: underline;
+    }
+  }
+
+  td,
+  th {
+    padding: 4px 8px;
+    border: none;
+  }
+
+  li div {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 8px;
+  }
+}

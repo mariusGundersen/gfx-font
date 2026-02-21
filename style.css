@@ -48,14 +48,40 @@ table#characters td:empty {
 
 table#glyph {
   line-height: 0;
+  border-collapse: collapse;
 }
 
 table#glyph td {
   padding: 0;
+  border: 2px solid #ccc;
 }
 
 table#glyph input {
   margin: 0;
+  appearance: none;
+  width: 100%;
+  min-width: 8px;
+  aspect-ratio: 1;
+
+  &:hover {
+    background: #666;
+  }
+
+  &:checked {
+    background: #000;
+    &:hover {
+      background: #aaa;
+    }
+  }
+
+  &:disabled {
+    background: #eee;
+    cursor: not-allowed;
+
+    &:hover {
+      background: #eee;
+    }
+  }
 }
 
 fieldset textarea {

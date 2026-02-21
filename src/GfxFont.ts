@@ -66,6 +66,12 @@ export function createGfxFont(parsedFont: ParsedFont) {
       }
       return null;
     },
+    get tallest() {
+      return Math.max(...glyphsSignal.value.map((g) => - g.yOffset.value));
+    },
+    get lowest() {
+      return Math.max(...glyphsSignal.value.map((g) => g.height.value + g.yOffset.value));
+    },
     serialize: () => {
       const name = nameSignal.value;
       const first = firstSignal.value;

@@ -18,35 +18,98 @@ export interface ParsedFont {
   bitmaps: number[];
 }
 
-function parseFont(cCode: string): ParsedFont {
-  const tokens = cCode.split(/\s+/);
+function tokenizeCCode(cCode: string): string[] {
+  const tokens: string[] = [];
+  let currentToken = '';
+  let inCommentArea = false;
+  let inComment = false;
 
-  const getNextToken = (): string => {
-    let token = tokens.shift();
-    while (token === '/*' || token === '/**') {
-      do {
-        token = tokens.shift();
-      } while (token !== '*/');
-      token = tokens.shift();
+  for (let i = 0; i < cCode.length; i++) {
+    const char = cCode[i];
+    const nextChar = cCode[i + 1];
+
+    if (inCommentArea) {
+      if (char === '*' && nextChar === '/') {
+        inCommentArea = false;
+        i++;
+      }
+      continue;
     }
+
+    if (inComment) {
+      if (char === '\n') {
+        inComment = false;
+        i++;
+      }
+      continue;
+    }
+
+    if (char === '/' && nextChar === '/') {
+      inComment = true;
+      i++;
+      continue;
+    }
+
+    if (char === '/' && nextChar === '*') {
+      inCommentArea = true;
+      i++;
+      continue;
+    }
+
+    const separatingCharacters = '{}()[],;'.split('');
+    if (/\s/.test(char)) {
+      if (currentToken) {
+        tokens.push(currentToken);
+        currentToken = '';
+      }
+    } else if (separatingCharacters.includes(char)) {
+      if (currentToken) {
+        tokens.push(currentToken);
+        currentToken = '';
+      }
+      tokens.push(char);
+    } else {
+      currentToken += char;
+    }
+  }
+
+  if (currentToken) {
+    tokens.push(currentToken);
+  }
+
+  return tokens;
+}
+
+function parseFont(cCode: string): ParsedFont {
+  const tokens = tokenizeCCode(cCode);
+
+  let i = 0;
+  const getNextToken = (): string => {
+    let token = tokens[i];
+    i++;
+
     if (token === undefined) {
-      throw new Error('Unexpected end of tokens');
+      throw new Error('Unexpected end of tokens, ' + tokens.slice(i - 5, i).join(' '));
     }
     return token;
   };
 
   const expectToken = (...expected: string[]): string => {
-    const token = getNextToken();
-    if (!expected.includes(token)) {
-      throw new Error(`Expected token "${expected}", got "${token}"`);
+    try {
+      const token = getNextToken();
+      if (!expected.includes(token)) {
+        throw new Error(`Expected token "${expected}", got "${token}" after "${tokens.slice(i - 5, i).join(' ')}"`);
+      }
+      return token;
+    } catch (error) {
+      throw new Error(`${error instanceof Error ? error.message : error}, expected one of "${expected.join('", "')}"`);
     }
-    return token;
   };
 
   const expectNumber = (token = getNextToken()): number => {
     const number = parseInt(token);
     if (isNaN(number)) {
-      throw new Error(`Expected number, got "${token}"`);
+      throw new Error(`Expected number, got "${token}", after "${tokens.slice(i - 5, i).join(' ')}"`);
     }
     return number;
   };
@@ -59,33 +122,39 @@ function parseFont(cCode: string): ParsedFont {
   let yAdvance = 0;
 
   let token = getNextToken();
-  while (tokens.length > 0) {
-    if (token.endsWith('Bitmaps[]')) {
+  while (i < tokens.length) {
+    if (token.endsWith('Bitmaps')) {
+      expectToken('[');
+      expectToken(']');
       expectToken('PROGMEM');
       expectToken('=');
       expectToken('{');
       token = getNextToken();
-      while (token !== '};') {
-        if (token.endsWith(',')) {
-          token = token.slice(0, -1);
-        }
+      while (token !== '}') {
         if (token.startsWith('0x')) {
           bitmaps.push(parseInt(token, 16));
         }
         token = getNextToken();
       }
-    } else if (token.endsWith('Glyphs[]')) {
+    } else if (token.endsWith('Glyphs')) {
+      expectToken('[');
+      expectToken(']');
       expectToken('PROGMEM');
       expectToken('=');
       expectToken('{');
       token = getNextToken();
-      while (token !== '};') {
+      while (token !== ';') {
         if (token === '{') {
           const offset = expectNumber();
+          expectToken(',');
           const width = expectNumber();
+          expectToken(',');
           const height = expectNumber();
+          expectToken(',');
           const xAdvance = expectNumber();
+          expectToken(',');
           const xOffset = expectNumber();
+          expectToken(',');
           const yOffset = expectNumber();
 
           glyphs.push({
@@ -97,9 +166,12 @@ function parseFont(cCode: string): ParsedFont {
             yOffset,
           });
 
-          expectToken('}', '},');
+          expectToken(',', '}');
         }
         token = getNextToken();
+        if (token === ',') {
+          token = getNextToken();
+        }
       }
     } else if (token === 'GFXfont') {
       name = getNextToken();
@@ -107,15 +179,17 @@ function parseFont(cCode: string): ParsedFont {
       expectToken('=');
       expectToken('{');
       token = getNextToken();
-      while (!token.endsWith('Glyphs,')) {
+      while (!token.endsWith('Glyphs')) {
         token = getNextToken();
       }
-
+      expectToken(',');
       first = expectNumber();
+      expectToken(',');
       last = expectNumber();
+      expectToken(',');
       yAdvance = expectNumber();
-      expectToken('};');
-      //token = getNextToken();
+      expectToken('}');
+      token = getNextToken();
     } else {
       token = getNextToken();
     }

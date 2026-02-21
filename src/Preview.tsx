@@ -3,10 +3,41 @@ import { useEffect, useRef, useState } from "preact/hooks";
 import { GfxFont } from "./GfxFont";
 
 export function Preview({ font }: { font: GfxFont }) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
   const [previewText, setPreviewText] = useState(
     "The quick brown fox jumps over the lazy dog",
   );
+
+  return (
+    <fieldset>
+      <legend>Preview</legend>
+      <textarea
+        rows={3}
+        value={previewText}
+        onInput={(e) => setPreviewText(e.currentTarget.value)}
+      />
+      <PreviewCanvas font={font} previewText={previewText} />
+    </fieldset>
+  );
+}
+
+interface PreviewCanvasProps {
+  font: GfxFont;
+  previewText: string;
+  scale?: number;
+  padding?: number;
+  bgColor?: string;
+  fgColor?: string;
+}
+
+export function PreviewCanvas({
+  font,
+  previewText,
+  scale = 2,
+  padding = 10,
+  bgColor = "#000",
+  fgColor = "#fff",
+}: PreviewCanvasProps) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     return effect(() => {
@@ -16,30 +47,32 @@ export function Preview({ font }: { font: GfxFont }) {
       const ctx = canvas.getContext("2d");
       if (!ctx) return;
 
-      const padding = 10;
-      const scale = 2;
-      const fontHeight = font.yAdvance;
       const lines = previewText.split("\n");
       const maxWidth = Math.max(
         ...lines.map((line) => {
           let width = 0;
           for (let char = 0; char < line.length; char++) {
             const glyph = font.getGlyph(line.charCodeAt(char));
-            width += glyph?.xAdvance.value || 0;
+            width += glyph
+              ? Math.max(
+                  glyph.xAdvance.value,
+                  glyph.width.value + glyph.xOffset.value,
+                )
+              : 0;
           }
           return width;
         }),
       );
 
       canvas.width = (maxWidth + padding * 2) * scale;
-      canvas.height = (lines.length * fontHeight + padding * 2) * scale;
+      canvas.height = (lines.length * font.yAdvance + padding * 2) * scale;
 
-      ctx.fillStyle = "#000";
+      ctx.fillStyle = bgColor;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = "#fff";
+      ctx.fillStyle = fgColor;
 
       ctx.scale(scale, scale);
-      let y = fontHeight;
+      let y = font.tallest + padding;
       for (const line of lines) {
         let x = padding;
         for (let char = 0; char < line.length; char++) {
@@ -60,20 +93,10 @@ export function Preview({ font }: { font: GfxFont }) {
           }
           x += glyph?.xAdvance.value || 0;
         }
-        y += fontHeight;
+        y += font.yAdvance;
       }
     });
-  }, [font, previewText]);
+  }, [font, previewText, scale, padding, bgColor, fgColor]);
 
-  return (
-    <fieldset>
-      <legend>Preview</legend>
-      <textarea
-        rows={3}
-        value={previewText}
-        onInput={(e) => setPreviewText(e.currentTarget.value)}
-      />
-      <canvas ref={canvasRef}></canvas>
-    </fieldset>
-  );
+  return <canvas ref={canvasRef} />;
 }

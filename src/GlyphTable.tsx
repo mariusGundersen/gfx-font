@@ -9,10 +9,24 @@ export function GlyphTable({ glyph }: { glyph: GfxGlyph }) {
         {glyph.rows.value.map((cols, y) => (
           <tr key={y}>
             {cols.map((x) => (
-              <td key={x}>
+              <td
+                key={x}
+                style={{
+                  borderBottomColor:
+                    y + glyph.yOffset.value == 0 ? "#a00" : undefined,
+                  borderRightColor:
+                    x == -1 || x - glyph.width.value == -1 ? "#a00" : undefined,
+                }}
+              >
                 <input
                   type="checkbox"
                   checked={glyph.getPixel(x, y) ? true : false}
+                  disabled={
+                    x < 0 ||
+                    y < 0 ||
+                    x >= glyph.width.value ||
+                    y >= glyph.height.value
+                  }
                   onChange={(e) => {
                     glyph.setPixel(x, y, e.currentTarget.checked);
                   }}

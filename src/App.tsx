@@ -1,22 +1,16 @@
-import { signal } from "@preact/signals";
-import { useState } from "preact/hooks";
+import { useSignal } from "@preact/signals";
 import { FontEditor } from "./FontEditor";
 import { gfxFontFromString } from "./gfx";
 import { GfxFont } from "./GfxFont";
 import { GfxGlyph } from "./GfxGlyph";
 import { GlyphEditor } from "./GlyphEditor";
-import { DownloadIcon, UploadIcon } from "./icons";
+import { DownloadIcon, LoadIcon, UploadIcon } from "./icons";
+import LoadFonts from "./LoadFont";
 import { Preview } from "./Preview";
 
-const fontSignal = signal<GfxFont | null>(null);
-const glyphsSignal = signal<GfxGlyph[]>([]);
-
-export function App({ initialFont }: { initialFont: GfxFont | null }) {
-  if (fontSignal.value === null && initialFont) {
-    fontSignal.value = initialFont;
-  }
-
-  const [, setRefresh] = useState(0);
+export function App({ initialFont }: { initialFont?: GfxFont }) {
+  const fontSignal = useSignal(initialFont);
+  const glyphsSignal = useSignal<GfxGlyph[]>([]);
 
   const handleUpload = (e: Event) => {
     const target = e.target as HTMLInputElement;
@@ -28,7 +22,6 @@ export function App({ initialFont }: { initialFont: GfxFont | null }) {
       if (typeof text === "string") {
         fontSignal.value = gfxFontFromString(text);
         glyphsSignal.value = [];
-        setRefresh((r) => r + 1);
       }
     };
     reader.readAsText(file);
@@ -62,8 +55,13 @@ export function App({ initialFont }: { initialFont: GfxFont | null }) {
 
   return (
     <main class="app">
+      <LoadFonts onSelect={(font) => (fontSignal.value = font)} />
       <h1>Font editor</h1>
       <div>
+        <button commandfor="load-popover" command="show-modal">
+          <LoadIcon />
+          Load
+        </button>
         <button onClick={clickNextInput}>
           <UploadIcon />
           Upload font file
@@ -74,7 +72,7 @@ export function App({ initialFont }: { initialFont: GfxFont | null }) {
           onChange={handleUpload}
           style="display: none"
         />
-        <button onClick={handleDownload}>
+        <button onClick={handleDownload} disabled={!fontSignal.value}>
           <DownloadIcon />
           Download font file
         </button>
