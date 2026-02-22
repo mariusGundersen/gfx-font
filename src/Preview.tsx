@@ -2,7 +2,7 @@ import { effect } from "@preact/signals";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { GfxFont } from "./GfxFont";
 
-export function Preview({ font }: { font: GfxFont }) {
+export function Preview({ font }: { font: InstanceType<typeof GfxFont> }) {
   const [previewText, setPreviewText] = useState(
     "The quick brown fox jumps over the lazy dog",
   );
@@ -21,7 +21,7 @@ export function Preview({ font }: { font: GfxFont }) {
 }
 
 interface PreviewCanvasProps {
-  font: GfxFont;
+  font: InstanceType<typeof GfxFont>;
   previewText: string;
   scale?: number;
   padding?: number;
@@ -65,14 +65,15 @@ export function PreviewCanvas({
       );
 
       canvas.width = (maxWidth + padding * 2) * scale;
-      canvas.height = (lines.length * font.yAdvance + padding * 2) * scale;
+      canvas.height =
+        (lines.length * font.yAdvance.value + padding * 2) * scale;
 
       ctx.fillStyle = bgColor;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.fillStyle = fgColor;
 
       ctx.scale(scale, scale);
-      let y = font.tallest + padding;
+      let y = font.getTallest() + padding;
       for (const line of lines) {
         let x = padding;
         for (let char = 0; char < line.length; char++) {
@@ -93,7 +94,7 @@ export function PreviewCanvas({
           }
           x += glyph?.xAdvance.value || 0;
         }
-        y += font.yAdvance;
+        y += font.yAdvance.value;
       }
     });
   }, [font, previewText, scale, padding, bgColor, fgColor]);

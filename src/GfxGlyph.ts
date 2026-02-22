@@ -1,4 +1,4 @@
-import { computed, ReadonlySignal, signal } from '@preact/signals';
+import { computed, createModel, ReadonlySignal, signal } from '@preact/signals';
 import { ParsedGlyph, toBytes } from './gfx';
 
 interface SerializedGlyph {
@@ -10,18 +10,15 @@ interface SerializedGlyph {
   bytes: number[]
 }
 
-export function createGfxGlyph(
-  char: string,
-  bytes: number[] = [],
-  glyphData: ParsedGlyph = {
-    height: 0,
-    width: 0,
-    offset: 0,
-    xAdvance: 0,
-    xOffset: 0,
-    yOffset: 0,
-  }
-) {
+export const GfxGlyph = createModel((char: string, bytes: number[] = [], glyphData: ParsedGlyph = {
+  height: 0,
+  width: 0,
+  offset: 0,
+  xAdvance: 0,
+  xOffset: 0,
+  yOffset: 0,
+}
+) => {
   const widthSignal = signal(glyphData.width);
   const heightSignal = signal(glyphData.height);
   const xAdvanceSignal = signal(glyphData.xAdvance);
@@ -75,9 +72,7 @@ export function createGfxGlyph(
   };
 
   return {
-    get char() {
-      return char;
-    },
+    char: computed(() => char),
     width: widthSignal as ReadonlySignal<number>,
     height: heightSignal as ReadonlySignal<number>,
     xAdvance: xAdvanceSignal,
@@ -113,9 +108,7 @@ export function createGfxGlyph(
       yOffsetSignal.value = yOffset;
     }
   };
-}
-
-export type GfxGlyph = ReturnType<typeof createGfxGlyph>;
+});
 
 const parseBytes = (bytes: number[], width: number, height: number) => {
   const gfx: boolean[][] = [];

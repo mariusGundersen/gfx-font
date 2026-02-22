@@ -8,23 +8,20 @@ import { DownloadIcon, LoadIcon, UploadIcon } from "./icons";
 import LoadFonts from "./LoadFont";
 import { Preview } from "./Preview";
 
-export function App({ initialFont }: { initialFont?: GfxFont }) {
+export function App({
+  initialFont,
+}: {
+  initialFont?: InstanceType<typeof GfxFont>;
+}) {
   const fontSignal = useSignal(initialFont);
-  const glyphsSignal = useSignal<GfxGlyph[]>([]);
+  const glyphsSignal = useSignal<InstanceType<typeof GfxGlyph>[]>([]);
 
-  const handleUpload = (e: Event) => {
-    const target = e.target as HTMLInputElement;
-    const file = target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const text = event.target?.result;
-      if (typeof text === "string") {
-        fontSignal.value = gfxFontFromString(text);
-        glyphsSignal.value = [];
-      }
-    };
-    reader.readAsText(file);
+  const handleUpload = async (e: Event) => {
+    const font = await onUpload(e);
+    if (font) {
+      fontSignal.value = font;
+      glyphsSignal.value = [];
+    }
   };
 
   const handleDownload = () => {
@@ -40,11 +37,11 @@ export function App({ initialFont }: { initialFont?: GfxFont }) {
     URL.revokeObjectURL(url);
   };
 
-  const handleCloseGlyph = (glyph: GfxGlyph) => {
+  const handleCloseGlyph = (glyph: InstanceType<typeof GfxGlyph>) => {
     glyphsSignal.value = glyphsSignal.value.filter((g) => g !== glyph);
   };
 
-  const handleSelectGlyph = (glyph: GfxGlyph) => {
+  const handleSelectGlyph = (glyph: InstanceType<typeof GfxGlyph>) => {
     if (!glyphsSignal.value.includes(glyph)) {
       glyphsSignal.value = [...glyphsSignal.value, glyph];
     }
@@ -97,4 +94,24 @@ export function App({ initialFont }: { initialFont?: GfxFont }) {
 
 function clickNextInput(e: { currentTarget: HTMLElement }) {
   return (e.currentTarget.nextElementSibling as HTMLInputElement).click();
+}
+
+async function onUpload(
+  e: Event,
+): Promise<InstanceType<typeof GfxFont> | null> {
+  const target = e.target as HTMLInputElement;
+  const file = target.files?.[0];
+  if (!file) return null;
+  const reader = new FileReader();
+  return new Promise((resolve) => {
+    reader.onload = (event) => {
+      const text = event.target?.result;
+      if (typeof text === "string") {
+        resolve(gfxFontFromString(text));
+      } else {
+        resolve(null);
+      }
+    };
+    reader.readAsText(file);
+  });
 }

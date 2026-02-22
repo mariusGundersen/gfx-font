@@ -6,8 +6,8 @@ export function FontEditor({
   font,
   onSelectGlyph,
 }: {
-  font: GfxFont;
-  onSelectGlyph: (glyph: GfxGlyph) => void;
+  font: InstanceType<typeof GfxFont>;
+  onSelectGlyph: (glyph: InstanceType<typeof GfxGlyph>) => void;
 }) {
   return (
     <fieldset>
@@ -19,7 +19,7 @@ export function FontEditor({
           name="name"
           value={font.name}
           onInput={(e) => {
-            font.name = e.currentTarget.value;
+            font.name.value = e.currentTarget.value;
           }}
         />
       </label>
@@ -29,8 +29,8 @@ export function FontEditor({
           type="number"
           name="first-char"
           value={font.first}
-          onInput={(e) => {
-            font.first = e.currentTarget.valueAsNumber;
+          onChange={(e) => {
+            font.setFirst(e.currentTarget.valueAsNumber);
           }}
           min="1"
           max="255"
@@ -41,9 +41,9 @@ export function FontEditor({
         <input
           type="number"
           name="last-char"
-          value={font.last}
-          onInput={(e) => {
-            font.last = e.currentTarget.valueAsNumber;
+          value={font.last.value}
+          onChange={(e) => {
+            font.setLast(e.currentTarget.valueAsNumber);
           }}
           min="1"
           max="255"
@@ -55,8 +55,8 @@ export function FontEditor({
           type="number"
           name="first-char"
           value={font.yAdvance}
-          onInput={(e) => {
-            font.yAdvance = e.currentTarget.valueAsNumber;
+          onChange={(e) => {
+            font.yAdvance.value = e.currentTarget.valueAsNumber;
           }}
           min="0"
           max="255"

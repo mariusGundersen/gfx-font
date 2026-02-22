@@ -1,7 +1,11 @@
 import { useRef } from "preact/hooks";
 import { GfxGlyph } from "./GfxGlyph";
 
-export function GlyphTable({ glyph }: { glyph: GfxGlyph }) {
+export function GlyphTable({
+  glyph,
+}: {
+  glyph: InstanceType<typeof GfxGlyph>;
+}) {
   const drawState = useRef<boolean>(false);
   return (
     <table id="glyph">

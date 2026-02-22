@@ -1,3 +1,4 @@
+import { computed } from "@preact/signals";
 import { GfxFont } from "./GfxFont";
 import { GfxGlyph } from "./GfxGlyph";
 
@@ -5,8 +6,8 @@ export function CharacterTable({
   font,
   onSelectGlyph,
 }: {
-  font: GfxFont;
-  onSelectGlyph: (glyph: GfxGlyph) => void;
+  font: InstanceType<typeof GfxFont>;
+  onSelectGlyph: (glyph: InstanceType<typeof GfxGlyph>) => void;
 }) {
   return (
     <table id="characters">
@@ -20,24 +21,26 @@ export function CharacterTable({
         {new Array(16).fill(0).map((_, i) => (
           <tr key={i}>
             <th>{`${i.toString(16)}_`}</th>
-            {new Array(16).fill(0).map((_, j) => {
-              const glyph = font.getGlyph(i * 16 + j);
-              return (
-                <td
-                  key={j}
-                  onClick={() => glyph && onSelectGlyph(glyph)}
-                  style={{
-                    background: glyph
-                      ? glyph.width.value === 0 || glyph.height.value === 0
-                        ? "#ccc"
-                        : "#cec"
-                      : "#ecc",
-                  }}
-                >
-                  {glyph?.char ?? ""}
-                </td>
-              );
-            })}
+            {computed(() =>
+              new Array(16).fill(0).map((_, j) => {
+                const glyph = font.getGlyph(i * 16 + j);
+                return (
+                  <td
+                    key={j}
+                    onClick={() => glyph && onSelectGlyph(glyph)}
+                    style={{
+                      background: glyph
+                        ? glyph.width.value === 0 || glyph.height.value === 0
+                          ? "#ccc"
+                          : "#cec"
+                        : "#ecc",
+                    }}
+                  >
+                    {glyph?.char}
+                  </td>
+                );
+              }),
+            )}
           </tr>
         ))}
       </tbody>

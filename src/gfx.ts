@@ -1,4 +1,4 @@
-import { GfxFont, createGfxFont } from './GfxFont';
+import { GfxFont } from './GfxFont';
 
 export interface ParsedGlyph {
   offset: number;
@@ -218,8 +218,8 @@ export function toBytes(bits: boolean[]): number[] {
 }
 
 
-export function gfxFontFromString(fontString: string): GfxFont {
-  return createGfxFont(parseFont(fontString));
+export function gfxFontFromString(fontString: string) {
+  return new GfxFont(parseFont(fontString));
 }
 
 export function toHex(value: number | string): string {

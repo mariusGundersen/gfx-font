@@ -1,4 +1,3 @@
-import { computed } from "@preact/signals";
 import { toHex } from "./gfx";
 import { GfxGlyph } from "./GfxGlyph";
 import { GlyphTable } from "./GlyphTable";
@@ -9,15 +8,14 @@ export function GlyphEditor({
   onClose,
   copyFrom,
 }: {
-  glyph: GfxGlyph;
+  glyph: InstanceType<typeof GfxGlyph>;
   onClose?: () => void;
   copyFrom(glyph: number): void;
 }) {
   return (
     <fieldset>
       <legend>
-        <strong>{glyph.char}</strong>{" "}
-        <code>({computed(() => toHex(glyph.char))})</code>
+        <strong>{glyph.char}</strong> <code>(toHex(glyph.char.value))</code>
         <button class="close-btn" onClick={onClose}>
           <CloseIcon />
         </button>

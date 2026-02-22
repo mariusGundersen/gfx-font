@@ -1,16 +1,16 @@
-import { signal } from "@preact/signals";
+import { createModel, ReadonlySignal, signal } from "@preact/signals";
 import { ParsedFont, toHex } from "./gfx";
-import { createGfxGlyph, GfxGlyph } from "./GfxGlyph";
+import { GfxGlyph } from "./GfxGlyph";
 
-export function createGfxFont(parsedFont: ParsedFont) {
+export const GfxFont = createModel((parsedFont: ParsedFont) => {
   const nameSignal = signal(parsedFont.name);
   const firstSignal = signal(parsedFont.first);
   const lastSignal = signal(parsedFont.last);
   const yAdvanceSignal = signal(parsedFont.yAdvance);
-  const glyphsSignal = signal<GfxGlyph[]>(
+  const glyphsSignal = signal(
     parsedFont.glyphs.map(
       (g, i) =>
-        createGfxGlyph(
+        new GfxGlyph(
           String.fromCharCode(i + parsedFont.first),
           parsedFont.bitmaps.slice(g.offset),
           g
@@ -19,44 +19,32 @@ export function createGfxFont(parsedFont: ParsedFont) {
   );
 
   return {
-    get name() {
-      return nameSignal.value;
-    },
-    set name(value: string) {
-      nameSignal.value = value;
-    },
-    get first() {
-      return firstSignal.value;
-    },
-    set first(value: number) {
+    name: nameSignal,
+    first: firstSignal as ReadonlySignal<number>,
+    setFirst(value: number) {
       const currentFirst = firstSignal.value;
+      value = Math.min(value, lastSignal.value);
       if (value < currentFirst) {
-        const newGlyphs = [...Array(currentFirst - value).fill(0).map((_, i) => createGfxGlyph(String.fromCharCode(value + i)))];
+        const newGlyphs = [...Array(currentFirst - value).fill(0).map((_, i) => new GfxGlyph(String.fromCharCode(value + i)))];
         glyphsSignal.value = [...newGlyphs, ...glyphsSignal.value];
       } else if (value > currentFirst) {
         glyphsSignal.value = glyphsSignal.value.slice(value - currentFirst);
       }
       firstSignal.value = value;
     },
-    get last() {
-      return lastSignal.value;
-    },
-    set last(value: number) {
+    last: lastSignal as ReadonlySignal<number>,
+    setLast(value: number) {
       const currentLast = lastSignal.value;
+      value = Math.max(value, firstSignal.value);
       if (value > currentLast) {
-        const newGlyphs = [...Array(value - currentLast).fill(0).map((_, i) => createGfxGlyph(String.fromCharCode(currentLast + 1 + i)))];
+        const newGlyphs = [...Array(value - currentLast).fill(0).map((_, i) => new GfxGlyph(String.fromCharCode(currentLast + 1 + i)))];
         glyphsSignal.value = [...glyphsSignal.value, ...newGlyphs];
       } else if (value < currentLast) {
         glyphsSignal.value = glyphsSignal.value.slice(0, value - firstSignal.value + 1);
       }
       lastSignal.value = value;
     },
-    get yAdvance() {
-      return yAdvanceSignal.value;
-    },
-    set yAdvance(value: number) {
-      yAdvanceSignal.value = value;
-    },
+    yAdvance: yAdvanceSignal,
     getGlyph(charCode: number) {
       const first = firstSignal.value;
       const last = lastSignal.value;
@@ -66,10 +54,10 @@ export function createGfxFont(parsedFont: ParsedFont) {
       }
       return null;
     },
-    get tallest() {
+    getTallest() {
       return Math.max(...glyphsSignal.value.map((g) => - g.yOffset.value));
     },
-    get lowest() {
+    getLowest() {
       return Math.max(...glyphsSignal.value.map((g) => g.height.value + g.yOffset.value));
     },
     serialize: () => {
@@ -114,6 +102,4 @@ const GFXfont ${name} PROGMEM = {
       `.trim();
     },
   };
-}
-
-export type GfxFont = ReturnType<typeof createGfxFont>;
+});
