@@ -151,40 +151,6 @@ function FontItem({
   );
 }
 
-type Pending<T> =
-  | { status: "pending"; promise: Promise<T> }
-  | { status: "resolved"; result: T }
-  | { status: "rejected"; error: any };
-
-const previews = new Map<string, Pending<any>>();
-
-function use<T>(name: string, factory: (name: string) => Promise<T>): T {
-  const preview = previews.get(name);
-  if (preview) {
-    switch (preview.status) {
-      case "pending":
-        throw preview.promise;
-      case "resolved":
-        return preview.result;
-      case "rejected":
-        throw preview.error;
-    }
-  } else {
-    const promise = factory(name).then(
-      (result) => {
-        previews.set(name, { status: "resolved", result });
-        return result;
-      },
-      (error) => {
-        previews.set(name, { status: "rejected", error });
-        throw error;
-      },
-    );
-    previews.set(name, { status: "pending", promise });
-    throw promise;
-  }
-}
-
 const fetchFont = (name: string) =>
   fetch(
     `https://raw.githubusercontent.com/adafruit/Adafruit-GFX-Library/refs/heads/master/Fonts/${name}`,
