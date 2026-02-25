@@ -77,11 +77,11 @@ table#glyph input {
   }
 
   &:disabled {
-    background: #eee;
+    background: #ddd;
     cursor: not-allowed;
 
     &:hover {
-      background: #eee;
+      background: #ddd;
     }
   }
 }

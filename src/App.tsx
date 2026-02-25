@@ -16,11 +16,15 @@ export function App({
   const fontSignal = useSignal(initialFont);
   const glyphsSignal = useSignal<InstanceType<typeof GfxGlyph>[]>([]);
 
+  const setFont = (font: InstanceType<typeof GfxFont>) => {
+    fontSignal.value = font;
+    glyphsSignal.value = [];
+  };
+
   const handleUpload = async (e: Event) => {
     const font = await onUpload(e);
     if (font) {
-      fontSignal.value = font;
-      glyphsSignal.value = [];
+      setFont(font);
     }
   };
 
@@ -52,7 +56,7 @@ export function App({
 
   return (
     <main class="app">
-      <LoadFonts onSelect={(font) => (fontSignal.value = font)} />
+      <LoadFonts onSelect={setFont} />
       <h1>Font editor</h1>
       <div>
         <button commandfor="load-popover" command="show-modal">

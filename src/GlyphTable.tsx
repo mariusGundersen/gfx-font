@@ -15,8 +15,8 @@ export function GlyphTable({
   const drawState = useRef<boolean>(false);
 
   const rows = range(
-    -glyph.yOffset.value + tallest.value,
-    Math.max(glyph.height.value, -glyph.yOffset.value + 1),
+    tallest.value - glyph.yOffset.value,
+    lowest.value - glyph.yOffset.value,
   );
   const cols = range(
     Math.min(0, -glyph.xOffset.value),
@@ -46,11 +46,10 @@ export function GlyphTable({
                         : undefined,
                     marginLeft: -x === glyph.xOffset.value ? "-1px" : undefined,
                     borderBottom:
-                      y === -glyph.yOffset.value
-                        ? "2px solid darkorange"
-                        : undefined,
+                      y === -glyph.yOffset.value ? "2px solid red" : undefined,
                     marginBottom:
                       y === -glyph.yOffset.value ? "-1px" : undefined,
+                    zIndex: y === -glyph.yOffset.value ? 1 : undefined,
                   }}
                   onChange={(e) => {
                     glyph.setPixel(x, y, e.currentTarget.checked);
