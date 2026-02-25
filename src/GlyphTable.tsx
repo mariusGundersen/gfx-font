@@ -1,27 +1,35 @@
+import { Signal } from "@preact/signals";
 import { useRef } from "preact/hooks";
 import { GfxGlyph } from "./GfxGlyph";
+import { range } from "./gfx";
 
 export function GlyphTable({
   glyph,
+  tallest,
+  lowest,
 }: {
   glyph: InstanceType<typeof GfxGlyph>;
+  tallest: Signal<number>;
+  lowest: Signal<number>;
 }) {
   const drawState = useRef<boolean>(false);
+
+  const rows = range(
+    -glyph.yOffset.value + tallest.value,
+    Math.max(glyph.height.value, -glyph.yOffset.value + 1),
+  );
+  const cols = range(
+    Math.min(0, -glyph.xOffset.value),
+    Math.max(glyph.xAdvance.value, glyph.width.value),
+  );
+
   return (
     <table id="glyph">
       <tbody>
-        {glyph.rows.value.map((cols, y) => (
-          <tr key={y}>
+        {rows.map((y) => (
+          <tr key={y} td-row={y}>
             {cols.map((x) => (
-              <td
-                key={x}
-                style={{
-                  borderBottomColor:
-                    y + glyph.yOffset.value == 0 ? "#a00" : undefined,
-                  borderRightColor:
-                    x == -1 || x - glyph.width.value == -1 ? "#a00" : undefined,
-                }}
-              >
+              <td key={x}>
                 <input
                   type="checkbox"
                   checked={glyph.getPixel(x, y) ? true : false}
@@ -31,6 +39,19 @@ export function GlyphTable({
                     x >= glyph.width.value ||
                     y >= glyph.height.value
                   }
+                  style={{
+                    borderLeft:
+                      -x === glyph.xOffset.value
+                        ? "2px solid purple"
+                        : undefined,
+                    marginLeft: -x === glyph.xOffset.value ? "-1px" : undefined,
+                    borderBottom:
+                      y === -glyph.yOffset.value
+                        ? "2px solid darkorange"
+                        : undefined,
+                    marginBottom:
+                      y === -glyph.yOffset.value ? "-1px" : undefined,
+                  }}
                   onChange={(e) => {
                     glyph.setPixel(x, y, e.currentTarget.checked);
                   }}

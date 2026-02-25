@@ -78,7 +78,7 @@ export const GfxGlyph = createModel((char: string, bytes: number[] = [], glyphDa
     xAdvance: xAdvanceSignal,
     xOffset: xOffsetSignal,
     yOffset: yOffsetSignal,
-    rows: computed(() => gfxSignal.value.map(() => new Array(Math.max(xAdvanceSignal.value, widthSignal.value)).fill(0).map((_, i) => i - xOffsetSignal.value))),
+    rows: computed(() => gfxSignal.value.map(() => new Array(Math.max(xAdvanceSignal.value, widthSignal.value + xOffsetSignal.value)).fill(0).map((_, i) => i))),
     getPixel: (x: number, y: number) => {
       const height = heightSignal.value;
       const width = widthSignal.value;
@@ -88,6 +88,19 @@ export const GfxGlyph = createModel((char: string, bytes: number[] = [], glyphDa
       return gfxSignal.value[y]?.[x] ?? false;
     },
     setPixel,
+    pixels: computed(() => {
+      const height = heightSignal.value;
+      const width = widthSignal.value;
+      const pixels: { x: number, y: number }[] = [];
+      for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+          if (gfxSignal.value[y][x]) {
+            pixels.push({ x, y });
+          }
+        }
+      }
+      return pixels;
+    }),
     setWidth,
     setHeight,
     serialize: () => ({

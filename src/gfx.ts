@@ -226,3 +226,11 @@ export function toHex(value: number | string): string {
   const hex = (typeof value === 'string' ? value.charCodeAt(0) : value).toString(16);
   return `0x${hex.length % 2 === 1 ? '0' : ''}${hex}`;
 }
+
+export function range(start: number, end: number): number[] {
+  const arr: number[] = [];
+  for (let i = start; i < end; i++) {
+    arr.push(i);
+  }
+  return arr;
+}

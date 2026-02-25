@@ -73,12 +73,13 @@ export function PreviewCanvas({
       ctx.fillStyle = fgColor;
 
       ctx.scale(scale, scale);
-      let y = font.getTallest() + padding;
+      let y = -font.tallest.value + padding;
       for (const line of lines) {
         let x = padding;
         for (let char = 0; char < line.length; char++) {
           const glyph = font.getGlyph(line.charCodeAt(char));
           if (glyph) {
+            glyph.pixels.value;
             for (let gy = 0; gy < glyph.height.value; gy++) {
               for (let gx = 0; gx < glyph.width.value; gx++) {
                 if (glyph.getPixel(gx, gy)) {

@@ -1,4 +1,4 @@
-import { createModel, ReadonlySignal, signal } from "@preact/signals";
+import { computed, createModel, ReadonlySignal, signal } from "@preact/signals";
 import { ParsedFont, toHex } from "./gfx";
 import { GfxGlyph } from "./GfxGlyph";
 
@@ -54,12 +54,8 @@ export const GfxFont = createModel((parsedFont: ParsedFont) => {
       }
       return null;
     },
-    getTallest() {
-      return Math.max(...glyphsSignal.value.map((g) => - g.yOffset.value));
-    },
-    getLowest() {
-      return Math.max(...glyphsSignal.value.map((g) => g.height.value + g.yOffset.value));
-    },
+    tallest: computed(() => Math.min(...glyphsSignal.value.map((g) => g.yOffset.value))),
+    lowest: computed(() => Math.max(...glyphsSignal.value.map((g) => g.height.value + g.yOffset.value))),
     serialize: () => {
       const name = nameSignal.value;
       const first = firstSignal.value;

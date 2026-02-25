@@ -84,6 +84,8 @@ export function App({
             copyFrom={(source) =>
               glyph.copyFrom(font!.getGlyph(source)!.serialize())
             }
+            tallest={font!.tallest}
+            lowest={font!.lowest}
           />
         ))}
       </div>
