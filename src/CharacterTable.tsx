@@ -31,12 +31,14 @@ export function CharacterTable({
                     style={{
                       background: glyph
                         ? glyph.width.value === 0 || glyph.height.value === 0
-                          ? "#ccc"
+                          ? "#ecc"
                           : "#cec"
-                        : "#ecc",
+                        : "#ccc",
+                      color: glyph ? "#000" : "#666",
+                      cursor: glyph ? "pointer" : "not-allowed",
                     }}
                   >
-                    {glyph?.char}
+                    {String.fromCharCode(i * 16 + j)}
                   </td>
                 );
               }),

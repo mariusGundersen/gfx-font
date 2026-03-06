@@ -54,6 +54,7 @@ table#glyph {
 
 table#glyph td {
   padding: 0;
+  border: 1px solid transparent;
 }
 
 table#glyph input {
@@ -64,6 +65,7 @@ table#glyph input {
   aspect-ratio: 1;
   border: 1px solid #ccc;
   box-sizing: content-box;
+  margin: -1px;
 
   &:hover {
     background: #aaa;
