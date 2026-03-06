@@ -13,6 +13,17 @@ button.close-btn {
   border: none;
 }
 
+.copy-paste-buttons {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.copy-paste-buttons button {
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
 .glyph-editors {
   display: flex;
   gap: 10px;
