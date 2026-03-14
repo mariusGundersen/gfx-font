@@ -103,15 +103,20 @@ export const GfxGlyph = createModel((char: string, bytes: number[] = [], glyphDa
     }),
     setWidth,
     setHeight,
-    serialize: () => ({
-      bytes: toBytes(gfxSignal.value.flat()),
-      width: widthSignal.value,
-      height: heightSignal.value,
-      xAdvance: xAdvanceSignal.value,
-      xOffset: xOffsetSignal.value,
-      yOffset: yOffsetSignal.value,
-      char,
-    }),
+    getBytes() {
+      return toBytes(gfxSignal.value.flat());
+    },
+    serialize() {
+      return {
+        bytes: this.getBytes(),
+        width: widthSignal.value,
+        height: heightSignal.value,
+        xAdvance: xAdvanceSignal.value,
+        xOffset: xOffsetSignal.value,
+        yOffset: yOffsetSignal.value,
+        char,
+      }
+    },
     copyFrom({ bytes, width, height, xAdvance, xOffset, yOffset }: SerializedGlyph) {
       gfxSignal.value = parseBytes(bytes, width, height);
       widthSignal.value = width;

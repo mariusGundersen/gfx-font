@@ -1,18 +1,15 @@
 import { Signal } from "@preact/signals";
-import { toBytes, toHex } from "./gfx";
+import { toHex } from "./gfx";
 import { GfxGlyph } from "./GfxGlyph";
 import { GlyphTable } from "./GlyphTable";
 import { CloseIcon, CopyIcon, PasteIcon } from "./icons";
 
 function renderGlyphToCanvas(
   glyph: InstanceType<typeof GfxGlyph>,
-  scale = 1,
 ): HTMLCanvasElement {
   const canvas = document.createElement("canvas");
-  const width = glyph.width.value;
-  const height = glyph.height.value;
-  canvas.width = width * scale;
-  canvas.height = height * scale;
+  canvas.width = glyph.width.value;
+  canvas.height = glyph.height.value;
   const ctx = canvas.getContext("2d")!;
   ctx.fillStyle = "white";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -20,7 +17,7 @@ function renderGlyphToCanvas(
   for (let y = 0; y < glyph.height.value; y++) {
     for (let x = 0; x < glyph.width.value; x++) {
       if (glyph.getPixel(x, y)) {
-        ctx.fillRect(x * scale, y * scale, scale, scale);
+        ctx.fillRect(x, y, 1, 1);
       }
     }
   }
@@ -28,14 +25,7 @@ function renderGlyphToCanvas(
 }
 
 async function copyGlyph(glyph: InstanceType<typeof GfxGlyph>) {
-  const bits: boolean[] = [];
-  for (let y = 0; y < glyph.height.value; y++) {
-    for (let x = 0; x < glyph.width.value; x++) {
-      bits.push(glyph.getPixel(x, y));
-    }
-  }
-  const bytes = toBytes(bits);
-  const hexList = bytes.map(toHex).join(", ");
+  const hexList = glyph.getBytes().map(toHex).join(", ");
 
   const canvas = renderGlyphToCanvas(glyph);
   const blob = await new Promise<Blob | null>((resolve) => {

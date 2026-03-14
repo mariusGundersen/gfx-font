@@ -92,8 +92,8 @@ export function PreviewCanvas({
                 }
               }
             }
+            x += glyph.xAdvance.value || 0;
           }
-          x += glyph?.xAdvance.value || 0;
         }
         y += font.yAdvance.value;
       }
