@@ -20,7 +20,7 @@ export function GlyphTable({
   );
   const cols = range(
     Math.min(0, -glyph.xOffset.value),
-    Math.max(glyph.xAdvance.value, glyph.width.value),
+    Math.max(glyph.xAdvance.value - glyph.xOffset.value, glyph.width.value),
   );
 
   return (
@@ -39,12 +39,11 @@ export function GlyphTable({
                     x >= glyph.width.value ||
                     y >= glyph.height.value
                   }
+                  data-outside={
+                    x + 1 + glyph.xOffset.value > glyph.xAdvance.value ||
+                    glyph.xOffset.value + x < 0
+                  }
                   style={{
-                    borderLeft:
-                      -x === glyph.xOffset.value
-                        ? "2px solid purple"
-                        : undefined,
-                    marginLeft: -x === glyph.xOffset.value ? "-1px" : undefined,
                     borderBottom:
                       y === -glyph.yOffset.value ? "2px solid red" : undefined,
                     marginBottom:

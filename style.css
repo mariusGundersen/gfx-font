@@ -78,6 +78,25 @@ table#glyph input {
   box-sizing: content-box;
   margin: -1px;
 
+  &[data-outside="true"] {
+    background: #caa;
+
+    &:hover {
+      background: #b99;
+    }
+
+    &:disabled {
+      background: #dcc;
+    }
+
+    &:checked {
+      background: #600;
+      &:hover {
+        background: #933;
+      }
+    }
+  }
+
   &:hover {
     background: #aaa;
   }
